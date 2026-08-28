@@ -6,6 +6,7 @@ import { createServer } from "http";
 import { Server } from "socket.io";
 import cors from "cors";
 
+import prisma from "./lib/prisma";
 import { setIo } from "./lib/socket";
 import { errorHandler } from "./middleware/error.middleware";
 import authRoutes from "./routes/auth.routes";
@@ -77,10 +78,12 @@ httpServer.listen(PORT, () => {
 });
 
 process.on("SIGINT", async () => {
+  await prisma.$disconnect();
   process.exit(0);
 });
 
 process.on("SIGTERM", async () => {
+  await prisma.$disconnect();
   process.exit(0);
 });
 

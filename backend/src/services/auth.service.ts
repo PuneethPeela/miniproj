@@ -43,6 +43,7 @@ export const register = async (
     data: {
       name,
       email,
+      passwordHash: hashedPassword,
       role: role as "STUDENT" | "KITCHEN_STAFF",
     },
   });
@@ -52,13 +53,17 @@ export const register = async (
   return {
     user: { id: user.id, name: user.name, email: user.email, role: user.role },
     token,
-    passwordHash: hashedPassword,
   };
 };
 
 export const login = async (email: string, password: string) => {
   const user = await prisma.user.findUnique({ where: { email } });
   if (!user) {
+    throw new AppError("Invalid credentials", 401);
+  }
+
+  const isValid = await verifyPassword(password, user.passwordHash);
+  if (!isValid) {
     throw new AppError("Invalid credentials", 401);
   }
 

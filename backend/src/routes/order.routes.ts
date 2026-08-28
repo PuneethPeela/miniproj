@@ -15,6 +15,14 @@ router.post(
 );
 
 router.get("/", authenticate, orderController.getUserOrders);
+
+router.get(
+  "/active/all",
+  authenticate,
+  authorize("KITCHEN_STAFF"),
+  orderController.getAllActiveOrders
+);
+
 router.get("/:id", authenticate, orderController.getOrderById);
 
 router.put(
@@ -25,13 +33,6 @@ router.put(
     { field: "status", label: "Status", required: true, type: "string" },
   ]),
   orderController.updateOrderStatus
-);
-
-router.get(
-  "/active/all",
-  authenticate,
-  authorize("KITCHEN_STAFF"),
-  orderController.getAllActiveOrders
 );
 
 export default router;

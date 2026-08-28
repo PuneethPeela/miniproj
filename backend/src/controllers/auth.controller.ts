@@ -11,8 +11,6 @@ export const register = async (
     const { name, email, password, role } = req.body;
     const result = await authService.register(name, email, password, role);
 
-    // Store password hash in a note (the schema doesn't have a password field)
-    // In production, you'd add a passwordHash field to the User model
     res.status(201).json({
       success: true,
       data: {

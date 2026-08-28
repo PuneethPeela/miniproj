@@ -1,6 +1,7 @@
 import prisma from "../lib/prisma";
 import { AppError } from "../middleware/error.middleware";
 import { emitOrderUpdate, emitKitchenUpdate } from "../lib/socket";
+import { OrderStatus } from "../types";
 
 export const createOrder = async (
   userId: string,
@@ -102,6 +103,14 @@ export const getUserOrders = async (userId: string) => {
 };
 
 export const updateOrderStatus = async (id: string, status: string) => {
+  const validStatuses = Object.values(OrderStatus);
+  if (!validStatuses.includes(status as OrderStatus)) {
+    throw new AppError(
+      `Invalid status. Must be one of: ${validStatuses.join(", ")}`,
+      400
+    );
+  }
+
   const order = await prisma.order.findUnique({ where: { id } });
   if (!order) {
     throw new AppError("Order not found", 404);
