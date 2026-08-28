@@ -1,0 +1,26 @@
+# Dependencies
+node_modules/
+
+# Build
+dist/
+
+# Environment
+.env
+.env.local
+
+# IDE
+.vscode/
+.idea/
+.DS_Store
+
+# Logs
+*.log
+
+# Prisma
+prisma/migrations/
+
+# Dev tools
+.agents/
+.claude/
+.cursor/
+.devin/
