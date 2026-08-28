@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Search, ShoppingCart } from 'lucide-react';
+import { Search, ShoppingCart, Utensils } from 'lucide-react';
 import { toast } from 'sonner';
 import { menu as menuApi, orders as ordersApi } from '../lib/api';
 import type { MenuItem, CartItem } from '../types';
@@ -55,7 +55,7 @@ export function MenuPage() {
     setPlacing(true);
     try {
       await ordersApi.create(cart.map((c) => ({ menuItemId: c.menuItem.id, quantity: c.quantity })));
-      toast.success('Order placed!');
+      toast.success('Order placed successfully!');
       setCart([]);
       setCartOpen(false);
     } catch (err) {
@@ -66,23 +66,38 @@ export function MenuPage() {
   };
 
   const cartCount = cart.reduce((sum, c) => sum + c.quantity, 0);
+  const cartTotal = cart.reduce((sum, c) => sum + c.menuItem.price * c.quantity, 0);
 
   return (
     <div>
-      <div className="flex items-center gap-3 mb-6">
+      {/* Page Header */}
+      <div className="mb-6">
+        <div className="flex items-center gap-3 mb-1">
+          <div className="h-10 w-10 bg-indigo-100 rounded-xl flex items-center justify-center">
+            <Utensils className="h-5 w-5 text-indigo-600" />
+          </div>
+          <div>
+            <h1 className="text-2xl font-bold text-slate-900">Campus Canteen Menu</h1>
+            <p className="text-sm text-slate-500">Browse items, check live availability, and pre-order for quick pickup.</p>
+          </div>
+        </div>
+      </div>
+
+      {/* Search + Cart */}
+      <div className="flex items-center gap-3 mb-5">
         <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
           <input
             type="text"
-            placeholder="Search menu..."
+            placeholder="Search for dosa, chai, rice..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="w-full pl-10 pr-4 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+            className="w-full pl-10 pr-4 py-2.5 border border-slate-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent bg-white"
           />
         </div>
         <button
           onClick={() => setCartOpen(true)}
-          className="relative p-2.5 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors"
+          className="relative flex items-center gap-2 px-4 py-2.5 bg-indigo-600 text-white rounded-xl hover:bg-indigo-700 transition-colors shadow-lg shadow-indigo-600/25"
         >
           <ShoppingCart className="h-5 w-5" />
           {cartCount > 0 && (
@@ -90,18 +105,22 @@ export function MenuPage() {
               {cartCount}
             </span>
           )}
+          {cartCount > 0 && (
+            <span className="hidden sm:inline text-sm font-medium">₹{cartTotal}</span>
+          )}
         </button>
       </div>
 
-      <div className="flex gap-2 overflow-x-auto pb-2 mb-4">
+      {/* Category Filters */}
+      <div className="flex gap-2 overflow-x-auto pb-2 mb-5 scrollbar-hide">
         {categories.map((cat) => (
           <button
             key={cat}
             onClick={() => setCategory(cat)}
-            className={`px-3 py-1.5 text-sm font-medium rounded-full whitespace-nowrap transition-colors ${
+            className={`px-4 py-2 text-sm font-medium rounded-full whitespace-nowrap transition-all ${
               category === cat
-                ? 'bg-indigo-600 text-white'
-                : 'bg-slate-200 text-slate-600 hover:bg-slate-300'
+                ? 'bg-indigo-600 text-white shadow-md shadow-indigo-600/25'
+                : 'bg-white text-slate-600 hover:bg-slate-100 border border-slate-200'
             }`}
           >
             {cat}
@@ -109,10 +128,23 @@ export function MenuPage() {
         ))}
       </div>
 
+      {/* Menu Grid */}
       {loading ? (
-        <div className="text-center py-12 text-slate-500">Loading menu...</div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          {[1, 2, 3, 4, 5, 6].map((i) => (
+            <div key={i} className="bg-white rounded-xl border border-slate-200 p-4 animate-pulse">
+              <div className="h-40 bg-slate-100 rounded-lg mb-3" />
+              <div className="h-4 bg-slate-100 rounded w-3/4 mb-2" />
+              <div className="h-3 bg-slate-100 rounded w-1/2" />
+            </div>
+          ))}
+        </div>
       ) : filtered.length === 0 ? (
-        <div className="text-center py-12 text-slate-500">No items found</div>
+        <div className="text-center py-16">
+          <Utensils className="h-12 w-12 mx-auto text-slate-300 mb-3" />
+          <p className="text-slate-500 font-medium">No items found</p>
+          <p className="text-sm text-slate-400 mt-1">Try a different search or category</p>
+        </div>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {filtered.map((item) => (

@@ -4,7 +4,7 @@ import { orders as ordersApi, queue as queueApi } from '../lib/api';
 import { useSocket } from '../hooks/useSocket';
 import type { Order, QueueStatus, OrderStatus } from '../types';
 import { QueueDisplay } from '../components/QueueDisplay';
-import { ChevronRight } from 'lucide-react';
+import { ChefHat, ChevronRight, Clock, Package } from 'lucide-react';
 
 const nextStatus: Record<string, OrderStatus> = {
   PENDING: 'CONFIRMED',
@@ -13,12 +13,12 @@ const nextStatus: Record<string, OrderStatus> = {
 };
 
 const statusColors: Record<Order['status'], string> = {
-  PENDING: 'bg-yellow-100 text-yellow-800',
-  CONFIRMED: 'bg-blue-100 text-blue-800',
-  PREPARING: 'bg-orange-100 text-orange-800',
-  READY: 'bg-green-100 text-green-800',
-  PICKED_UP: 'bg-slate-100 text-slate-800',
-  CANCELLED: 'bg-red-100 text-red-800',
+  PENDING: 'bg-yellow-100 text-yellow-800 border-yellow-200',
+  CONFIRMED: 'bg-blue-100 text-blue-800 border-blue-200',
+  PREPARING: 'bg-orange-100 text-orange-800 border-orange-200',
+  READY: 'bg-green-100 text-green-800 border-green-200',
+  PICKED_UP: 'bg-slate-100 text-slate-800 border-slate-200',
+  CANCELLED: 'bg-red-100 text-red-800 border-red-200',
 };
 
 const statusFilters: { key: OrderStatus | 'ALL'; label: string }[] = [
@@ -102,27 +102,51 @@ export function KitchenDashboard() {
     ? orders
     : orders.filter((o) => o.status === statusFilter);
 
-  if (loading) return <div className="text-center py-12 text-slate-500">Loading...</div>;
+  if (loading) {
+    return (
+      <div className="space-y-6">
+        <div className="bg-white rounded-xl border border-slate-200 p-6 animate-pulse">
+          <div className="h-6 bg-slate-100 rounded w-1/3 mb-4" />
+          <div className="grid grid-cols-3 gap-4">
+            {[1, 2, 3].map((i) => (
+              <div key={i} className="h-20 bg-slate-100 rounded-lg" />
+            ))}
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
+      {/* Page Header */}
+      <div className="flex items-center gap-3">
+        <div className="h-10 w-10 bg-indigo-100 rounded-xl flex items-center justify-center">
+          <ChefHat className="h-5 w-5 text-indigo-600" />
+        </div>
+        <div>
+          <h1 className="text-2xl font-bold text-slate-900">Kitchen Dashboard</h1>
+          <p className="text-sm text-slate-500">Live queue status and order management</p>
+        </div>
+      </div>
+
       <QueueDisplay queue={queue} />
 
       <div>
         <div className="flex items-center justify-between mb-3">
           <h2 className="text-lg font-semibold text-slate-900">Active Orders</h2>
-          <span className="text-sm text-slate-500">{orders.length} total</span>
+          <span className="text-sm text-slate-500 bg-slate-100 px-2.5 py-1 rounded-full">{orders.length} total</span>
         </div>
 
-        <div className="flex gap-2 overflow-x-auto pb-2 mb-3">
+        <div className="flex gap-2 overflow-x-auto pb-2 mb-4 scrollbar-hide">
           {statusFilters.map((f) => (
             <button
               key={f.key}
               onClick={() => setStatusFilter(f.key)}
-              className={`px-3 py-1.5 text-sm font-medium rounded-full whitespace-nowrap transition-colors ${
+              className={`px-4 py-2 text-sm font-medium rounded-full whitespace-nowrap transition-all ${
                 statusFilter === f.key
-                  ? 'bg-indigo-600 text-white'
-                  : 'bg-slate-200 text-slate-600 hover:bg-slate-300'
+                  ? 'bg-indigo-600 text-white shadow-md shadow-indigo-600/25'
+                  : 'bg-white text-slate-600 hover:bg-slate-100 border border-slate-200'
               }`}
             >
               {f.label}
@@ -131,42 +155,54 @@ export function KitchenDashboard() {
         </div>
 
         {filtered.length === 0 ? (
-          <p className="text-sm text-slate-500">
-            {orders.length === 0 ? 'No active orders' : 'No orders match this filter'}
-          </p>
+          <div className="text-center py-12 bg-white rounded-xl border border-slate-200">
+            <Package className="h-10 w-10 mx-auto text-slate-300 mb-2" />
+            <p className="text-slate-500 font-medium">
+              {orders.length === 0 ? 'No active orders' : 'No orders match this filter'}
+            </p>
+          </div>
         ) : (
-          <div className="space-y-3">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {filtered.map((order) => (
               <div
                 key={order.id}
-                className="bg-white rounded-xl shadow-sm border border-slate-200 p-4"
+                className="bg-white rounded-xl shadow-sm border border-slate-200 p-5 hover:shadow-md transition-shadow"
               >
-                <div className="flex items-center justify-between mb-2">
-                  <div className="flex items-center gap-2">
-                    <span className="text-lg font-bold text-indigo-600">#{order.tokenNumber}</span>
-                    <span className="text-sm text-slate-500">{order.user?.name}</span>
+                <div className="flex items-center justify-between mb-3">
+                  <div className="flex items-center gap-3">
+                    <div className="h-10 w-10 bg-indigo-100 rounded-lg flex items-center justify-center">
+                      <span className="text-lg font-bold text-indigo-600">#{order.tokenNumber}</span>
+                    </div>
+                    <div>
+                      <p className="text-sm font-semibold text-slate-900">{order.user?.name}</p>
+                      <p className="text-xs text-slate-500">{new Date(order.createdAt).toLocaleTimeString()}</p>
+                    </div>
                   </div>
-                  <span className={`px-2.5 py-0.5 text-xs font-medium rounded-full ${statusColors[order.status]}`}>
-                    {order.status}
+                  <span className={`px-3 py-1 text-xs font-semibold rounded-full border ${statusColors[order.status]}`}>
+                    {order.status.replace('_', ' ')}
                   </span>
                 </div>
 
-                <div className="text-sm text-slate-600 mb-3">
-                  {order.items.map((item) => `${item.quantity}x ${item.menuItem?.name ?? 'Item'}`).join(', ')}
+                <div className="bg-slate-50 rounded-lg p-3 mb-3">
+                  <p className="text-sm text-slate-700 font-medium">
+                    {order.items.map((item) => `${item.quantity}x ${item.menuItem?.name ?? 'Item'}`).join(', ')}
+                  </p>
                 </div>
 
-                {order.estimatedAt && (
-                  <p className="text-xs text-slate-400 mb-2">
-                    ETA: {new Date(order.estimatedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                  </p>
-                )}
-
                 <div className="flex items-center justify-between">
-                  <span className="text-sm font-medium">₹{order.totalAmount}</span>
+                  <div className="flex items-center gap-3">
+                    <span className="text-lg font-bold text-slate-900">₹{order.totalAmount}</span>
+                    {order.estimatedAt && (
+                      <span className="flex items-center gap-1 text-xs text-slate-500">
+                        <Clock className="h-3 w-3" />
+                        ETA {new Date(order.estimatedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                      </span>
+                    )}
+                  </div>
                   {nextStatus[order.status] && (
                     <button
                       onClick={() => advanceStatus(order)}
-                      className="flex items-center gap-1 px-3 py-1.5 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 transition-colors"
+                      className="flex items-center gap-1.5 px-4 py-2 bg-indigo-600 text-white text-sm font-semibold rounded-lg hover:bg-indigo-700 transition-colors shadow-md shadow-indigo-600/25"
                     >
                       {nextStatus[order.status]}
                       <ChevronRight className="h-4 w-4" />
