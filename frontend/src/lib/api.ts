@@ -90,3 +90,60 @@ export const orders = {
 export const queue = {
   getStatus: () => request<import('../types').QueueStatus>('/queue/status'),
 };
+
+export interface DashboardStats {
+  activeOrders: number;
+  avgWaitTime: number;
+  queueLength: number;
+  kitchenLoad: number;
+}
+
+export interface BatchAggregatorItem {
+  menuItemId: string;
+  name: string;
+  totalQuantity: number;
+  orderCount: number;
+}
+
+export interface BatchAggregatorResponse {
+  windowMinutes: number;
+  totalUnits: number;
+  uniqueDishTypes: number;
+  ordersInWindow: number;
+  items: BatchAggregatorItem[];
+}
+
+export interface StockRequest {
+  id: string;
+  menuItemId: string;
+  menuItem?: import('../types').MenuItem;
+  requestedBy: string;
+  requester?: import('../types').User;
+  quantity: number;
+  reason?: string;
+  status: string;
+  reviewedBy?: string;
+  reviewer?: import('../types').User;
+  reviewedAt?: string;
+  createdAt: string;
+}
+
+export const dashboard = {
+  getStats: () => request<DashboardStats>('/dashboard/stats'),
+  getBatch: (windowMinutes: number = 5) =>
+    request<BatchAggregatorResponse>(`/dashboard/batch?window=${windowMinutes}`),
+};
+
+export const stockRequests = {
+  create: (data: { menuItemId: string; quantity: number; reason?: string }) =>
+    request<StockRequest>('/stock-requests', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    }),
+  getPending: () => request<StockRequest[]>('/stock-requests/pending'),
+  getMine: () => request<StockRequest[]>('/stock-requests/mine'),
+  approve: (id: string) =>
+    request<StockRequest>(`/stock-requests/${id}/approve`, { method: 'PUT' }),
+  reject: (id: string) =>
+    request<StockRequest>(`/stock-requests/${id}/reject`, { method: 'PUT' }),
+};

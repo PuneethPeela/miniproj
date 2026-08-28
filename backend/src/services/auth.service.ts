@@ -44,7 +44,7 @@ export const register = async (
       name,
       email,
       passwordHash: hashedPassword,
-      role: role as "STUDENT" | "KITCHEN_STAFF",
+      role: role as "STUDENT" | "KITCHEN_STAFF" | "MANAGER",
     },
   });
 

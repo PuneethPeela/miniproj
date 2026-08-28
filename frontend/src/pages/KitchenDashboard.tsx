@@ -56,7 +56,9 @@ export function KitchenDashboard() {
   }, []);
 
   useEffect(() => {
-    const handleOrderUpdate = (order: Order) => {
+    socket.emit('join:kitchen');
+
+    const upsertOrder = (order: Order) => {
       setOrders((prev) => {
         const idx = prev.findIndex((o) => o.id === order.id);
         if (order.status === 'PICKED_UP' || order.status === 'CANCELLED') {
@@ -70,8 +72,12 @@ export function KitchenDashboard() {
         return [order, ...prev];
       });
     };
-    const handleKitchenUpdate = (data: Order) => {
-      handleOrderUpdate(data);
+
+    const handleOrderUpdate = (data: { orderId: string; status: string; order: Order }) => {
+      upsertOrder(data.order);
+    };
+    const handleKitchenUpdate = (order: Order) => {
+      upsertOrder(order);
     };
     const handleQueueUpdate = (status: QueueStatus) => {
       setQueue(status);

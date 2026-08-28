@@ -12,6 +12,7 @@ export interface AuthRequest extends Request {
 export enum UserRole {
   STUDENT = "STUDENT",
   KITCHEN_STAFF = "KITCHEN_STAFF",
+  MANAGER = "MANAGER",
 }
 
 export enum OrderStatus {

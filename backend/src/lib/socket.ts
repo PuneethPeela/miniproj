@@ -23,7 +23,7 @@ export const emitOrderUpdate = (
 };
 
 export const emitKitchenUpdate = (order: Record<string, unknown>): void => {
-  getIo().to("kitchen:live").emit("kitchen:newOrder", order);
+  getIo().to("kitchen:live").emit("kitchen:update", order);
 };
 
 export const emitQueueUpdate = (queueStatus: Record<string, unknown>): void => {

@@ -13,6 +13,8 @@ import authRoutes from "./routes/auth.routes";
 import menuRoutes from "./routes/menu.routes";
 import orderRoutes from "./routes/order.routes";
 import queueRoutes from "./routes/queue.routes";
+import stockRequestRoutes from "./routes/stock-request.routes";
+import dashboardRoutes from "./routes/dashboard.routes";
 
 const CLIENT_ORIGIN = process.env.CLIENT_ORIGIN ?? "http://localhost:5173";
 const PORT = Number(process.env.PORT) || 3000;
@@ -40,6 +42,8 @@ app.use("/api/auth", authRoutes);
 app.use("/api/menu", menuRoutes);
 app.use("/api/orders", orderRoutes);
 app.use("/api/queue", queueRoutes);
+app.use("/api/stock-requests", stockRequestRoutes);
+app.use("/api/dashboard", dashboardRoutes);
 
 app.use(errorHandler);
 

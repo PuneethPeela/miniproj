@@ -38,11 +38,15 @@ export function OrderPage() {
 
   useEffect(() => {
     if (!id) return;
-    const handleUpdate = (updated: Order) => {
-      if (updated.id === id) setOrder(updated);
+    socket.emit('join:order', id);
+    const handleUpdate = (data: { orderId: string; status: string; order: Order }) => {
+      if (data.orderId === id) setOrder(data.order);
     };
     socket.on('order:update', handleUpdate);
-    return () => { socket.off('order:update', handleUpdate); };
+    return () => {
+      socket.off('order:update', handleUpdate);
+      socket.emit('leave:order', id);
+    };
   }, [id, socket]);
 
   const handlePickUp = async () => {

@@ -47,7 +47,9 @@ export function QueuePage() {
   }, []);
 
   useEffect(() => {
-    const handleOrderUpdate = (order: Order) => {
+    socket.emit('join:queue');
+    const handleOrderUpdate = (data: { orderId: string; status: string; order: Order }) => {
+      const order = data.order;
       if (order.userId === user?.id) {
         setMyOrders((prev) => {
           const idx = prev.findIndex((o) => o.id === order.id);

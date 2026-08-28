@@ -15,6 +15,7 @@ datasource db {
 enum Role {
   STUDENT
   KITCHEN_STAFF
+  MANAGER
 }
 
 enum OrderStatus {
@@ -43,7 +44,9 @@ model User {
   createdAt    DateTime @default(now()) @map("created_at")
   updatedAt    DateTime @updatedAt      @map("updated_at")
 
-  orders Order[]
+  orders            Order[]
+  stockRequests     StockRequest[] @relation("StockRequester")
+  reviewedRequests  StockRequest[] @relation("Reviewer")
 
   @@map("users")
 }
@@ -61,7 +64,8 @@ model MenuItem {
   createdAt        DateTime @default(now()) @map("created_at")
   updatedAt        DateTime @updatedAt      @map("updated_at")
 
-  orderItems OrderItem[]
+  orderItems    OrderItem[]
+  stockRequests StockRequest[]
 
   @@map("menu_items")
 }
@@ -118,4 +122,23 @@ model QueueStatus {
   updatedAt     DateTime @updatedAt @map("updated_at")
 
   @@map("queue_status")
+}
+
+model StockRequest {
+  id            String    @id @default(cuid())
+  menuItemId    String
+  menuItem      MenuItem  @relation(fields: [menuItemId], references: [id])
+  requestedBy   String
+  requester     User      @relation("StockRequester", fields: [requestedBy], references: [id])
+  quantity      Int
+  reason        String?
+  status        String    @default("PENDING")
+  reviewedBy    String?
+  reviewer      User?     @relation("Reviewer", fields: [reviewedBy], references: [id])
+  reviewedAt    DateTime?
+  createdAt     DateTime  @default(now())
+
+  @@index([status])
+  @@index([menuItemId])
+  @@map("stock_requests")
 }

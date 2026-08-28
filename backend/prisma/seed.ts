@@ -36,7 +36,18 @@ async function main() {
     },
   });
 
-  console.log(`Created users: ${student.name}, ${kitchenStaff.name}`);
+  const manager = await prisma.user.upsert({
+    where: { email: "manager@college.edu" },
+    update: {},
+    create: {
+      name: "Amit Verma",
+      email: "manager@college.edu",
+      passwordHash,
+      role: "MANAGER",
+    },
+  });
+
+  console.log(`Created users: ${student.name}, ${kitchenStaff.name}, ${manager.name}`);
 
   const menuItems = [
     {

@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
-import { Search, ShoppingCart, Utensils } from 'lucide-react';
+import { Search, ShoppingCart, Utensils, Clock, Users, TrendingUp, ChefHat } from 'lucide-react';
 import { toast } from 'sonner';
-import { menu as menuApi, orders as ordersApi } from '../lib/api';
+import { menu as menuApi, orders as ordersApi, dashboard } from '../lib/api';
+import type { DashboardStats } from '../lib/api';
 import type { MenuItem, CartItem } from '../types';
 import { MenuItemCard } from '../components/MenuItemCard';
 import { CartDrawer } from '../components/CartDrawer';
@@ -14,9 +15,11 @@ export function MenuPage() {
   const [cart, setCart] = useState<CartItem[]>([]);
   const [cartOpen, setCartOpen] = useState(false);
   const [placing, setPlacing] = useState(false);
+  const [stats, setStats] = useState<DashboardStats | null>(null);
 
   useEffect(() => {
     menuApi.getAll().then(setItems).catch(() => toast.error('Failed to load menu')).finally(() => setLoading(false));
+    dashboard.getStats().then(setStats).catch(() => {});
   }, []);
 
   const categories = ['All', ...Array.from(new Set(items.map((i) => i.category)))];
@@ -82,6 +85,40 @@ export function MenuPage() {
           </div>
         </div>
       </div>
+
+      {/* Stats Bar */}
+      {stats && (
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-6">
+          <div className="bg-white rounded-xl border border-slate-200 p-4">
+            <div className="flex items-center gap-2 mb-1">
+              <TrendingUp className="h-4 w-4 text-indigo-500" />
+              <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Active Orders</span>
+            </div>
+            <p className="text-2xl font-bold text-slate-900">{stats.activeOrders}</p>
+          </div>
+          <div className="bg-white rounded-xl border border-slate-200 p-4">
+            <div className="flex items-center gap-2 mb-1">
+              <Clock className="h-4 w-4 text-orange-500" />
+              <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Avg Wait</span>
+            </div>
+            <p className="text-2xl font-bold text-slate-900">{stats.avgWaitTime}m</p>
+          </div>
+          <div className="bg-white rounded-xl border border-slate-200 p-4">
+            <div className="flex items-center gap-2 mb-1">
+              <Users className="h-4 w-4 text-green-500" />
+              <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Queue Length</span>
+            </div>
+            <p className="text-2xl font-bold text-slate-900">{stats.queueLength}</p>
+          </div>
+          <div className="bg-white rounded-xl border border-slate-200 p-4">
+            <div className="flex items-center gap-2 mb-1">
+              <ChefHat className="h-4 w-4 text-purple-500" />
+              <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Kitchen Load</span>
+            </div>
+            <p className="text-2xl font-bold text-slate-900">{stats.kitchenLoad}%</p>
+          </div>
+        </div>
+      )}
 
       {/* Search + Cart */}
       <div className="flex items-center gap-3 mb-5">
