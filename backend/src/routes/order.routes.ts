@@ -35,4 +35,7 @@ router.put(
   orderController.updateOrderStatus
 );
 
+router.put("/:id/pickup", authenticate, orderController.pickUpOrder);
+router.put("/:id/cancel", authenticate, orderController.cancelOrder);
+
 export default router;

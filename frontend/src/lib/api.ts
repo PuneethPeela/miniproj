@@ -68,12 +68,22 @@ export const orders = {
 
   getById: (id: string) => request<import('../types').Order>(`/orders/${id}`),
 
-  getActive: () => request<import('../types').Order[]>('/orders/active'),
+  getActive: () => request<import('../types').Order[]>('/orders/active/all'),
 
   updateStatus: (id: string, status: import('../types').OrderStatus) =>
     request<import('../types').Order>(`/orders/${id}/status`, {
       method: 'PUT',
       body: JSON.stringify({ status }),
+    }),
+
+  pickUp: (id: string) =>
+    request<import('../types').Order>(`/orders/${id}/pickup`, {
+      method: 'PUT',
+    }),
+
+  cancel: (id: string) =>
+    request<import('../types').Order>(`/orders/${id}/cancel`, {
+      method: 'PUT',
     }),
 };
 

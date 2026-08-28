@@ -1,5 +1,5 @@
 import { NavLink, Outlet } from 'react-router-dom';
-import { UtensilsCrossed, Clock, ChefHat, LayoutGrid, LogOut, User } from 'lucide-react';
+import { UtensilsCrossed, Clock, ChefHat, LayoutGrid, LogOut, User, Utensils } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
 
 const studentLinks = [
@@ -8,8 +8,8 @@ const studentLinks = [
 ];
 
 const kitchenLinks = [
-  { to: '/', icon: LayoutGrid, label: 'Menu' },
   { to: '/kitchen', icon: ChefHat, label: 'Kitchen' },
+  { to: '/kitchen/menu', icon: Utensils, label: 'Manage' },
   { to: '/orders', icon: Clock, label: 'Queue' },
 ];
 

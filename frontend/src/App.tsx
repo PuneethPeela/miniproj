@@ -9,6 +9,7 @@ import { MenuPage } from './pages/MenuPage';
 import { QueuePage } from './pages/QueuePage';
 import { OrderPage } from './pages/OrderPage';
 import { KitchenDashboard } from './pages/KitchenDashboard';
+import { MenuManagementPage } from './pages/MenuManagementPage';
 
 export default function App() {
   return (
@@ -25,6 +26,7 @@ export default function App() {
                 <Route path="/orders" element={<QueuePage />} />
                 <Route path="/orders/:id" element={<OrderPage />} />
                 <Route path="/kitchen" element={<KitchenDashboard />} />
+                <Route path="/kitchen/menu" element={<MenuManagementPage />} />
               </Route>
             </Route>
           </Routes>

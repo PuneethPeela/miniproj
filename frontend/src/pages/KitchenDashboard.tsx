@@ -21,10 +21,19 @@ const statusColors: Record<Order['status'], string> = {
   CANCELLED: 'bg-red-100 text-red-800',
 };
 
+const statusFilters: { key: OrderStatus | 'ALL'; label: string }[] = [
+  { key: 'ALL', label: 'All' },
+  { key: 'PENDING', label: 'Pending' },
+  { key: 'CONFIRMED', label: 'Confirmed' },
+  { key: 'PREPARING', label: 'Preparing' },
+  { key: 'READY', label: 'Ready' },
+];
+
 export function KitchenDashboard() {
   const [orders, setOrders] = useState<Order[]>([]);
   const [queue, setQueue] = useState<QueueStatus | null>(null);
   const [loading, setLoading] = useState(true);
+  const [statusFilter, setStatusFilter] = useState<OrderStatus | 'ALL'>('ALL');
   const { socket } = useSocket();
 
   const loadData = async () => {
@@ -89,6 +98,10 @@ export function KitchenDashboard() {
     }
   };
 
+  const filtered = statusFilter === 'ALL'
+    ? orders
+    : orders.filter((o) => o.status === statusFilter);
+
   if (loading) return <div className="text-center py-12 text-slate-500">Loading...</div>;
 
   return (
@@ -96,12 +109,34 @@ export function KitchenDashboard() {
       <QueueDisplay queue={queue} />
 
       <div>
-        <h2 className="text-lg font-semibold text-slate-900 mb-3">Active Orders</h2>
-        {orders.length === 0 ? (
-          <p className="text-sm text-slate-500">No active orders</p>
+        <div className="flex items-center justify-between mb-3">
+          <h2 className="text-lg font-semibold text-slate-900">Active Orders</h2>
+          <span className="text-sm text-slate-500">{orders.length} total</span>
+        </div>
+
+        <div className="flex gap-2 overflow-x-auto pb-2 mb-3">
+          {statusFilters.map((f) => (
+            <button
+              key={f.key}
+              onClick={() => setStatusFilter(f.key)}
+              className={`px-3 py-1.5 text-sm font-medium rounded-full whitespace-nowrap transition-colors ${
+                statusFilter === f.key
+                  ? 'bg-indigo-600 text-white'
+                  : 'bg-slate-200 text-slate-600 hover:bg-slate-300'
+              }`}
+            >
+              {f.label}
+            </button>
+          ))}
+        </div>
+
+        {filtered.length === 0 ? (
+          <p className="text-sm text-slate-500">
+            {orders.length === 0 ? 'No active orders' : 'No orders match this filter'}
+          </p>
         ) : (
           <div className="space-y-3">
-            {orders.map((order) => (
+            {filtered.map((order) => (
               <div
                 key={order.id}
                 className="bg-white rounded-xl shadow-sm border border-slate-200 p-4"
@@ -119,6 +154,12 @@ export function KitchenDashboard() {
                 <div className="text-sm text-slate-600 mb-3">
                   {order.items.map((item) => `${item.quantity}x ${item.menuItem?.name ?? 'Item'}`).join(', ')}
                 </div>
+
+                {order.estimatedAt && (
+                  <p className="text-xs text-slate-400 mb-2">
+                    ETA: {new Date(order.estimatedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                  </p>
+                )}
 
                 <div className="flex items-center justify-between">
                   <span className="text-sm font-medium">₹{order.totalAmount}</span>

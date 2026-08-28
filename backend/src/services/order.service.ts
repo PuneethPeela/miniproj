@@ -102,6 +102,66 @@ export const getUserOrders = async (userId: string) => {
   });
 };
 
+export const pickUpOrder = async (id: string, userId: string) => {
+  const order = await prisma.order.findUnique({ where: { id } });
+  if (!order) {
+    throw new AppError("Order not found", 404);
+  }
+  if (order.userId !== userId) {
+    throw new AppError("Not authorized", 403);
+  }
+  if (order.status !== "READY") {
+    throw new AppError("Order is not ready for pickup", 400);
+  }
+
+  const updatedOrder = await prisma.order.update({
+    where: { id },
+    data: { status: "PICKED_UP" },
+    include: {
+      items: { include: { menuItem: true } },
+      user: { select: { id: true, name: true, email: true } },
+    },
+  });
+
+  await updateQueueStatus();
+
+  try {
+    emitOrderUpdate(id, "PICKED_UP", updatedOrder as unknown as Record<string, unknown>);
+  } catch {}
+
+  return updatedOrder;
+};
+
+export const cancelOrder = async (id: string, userId: string) => {
+  const order = await prisma.order.findUnique({ where: { id } });
+  if (!order) {
+    throw new AppError("Order not found", 404);
+  }
+  if (order.userId !== userId) {
+    throw new AppError("Not authorized", 403);
+  }
+  if (order.status !== "PENDING") {
+    throw new AppError("Only pending orders can be cancelled", 400);
+  }
+
+  const updatedOrder = await prisma.order.update({
+    where: { id },
+    data: { status: "CANCELLED" },
+    include: {
+      items: { include: { menuItem: true } },
+      user: { select: { id: true, name: true, email: true } },
+    },
+  });
+
+  await updateQueueStatus();
+
+  try {
+    emitOrderUpdate(id, "CANCELLED", updatedOrder as unknown as Record<string, unknown>);
+  } catch {}
+
+  return updatedOrder;
+};
+
 export const updateOrderStatus = async (id: string, status: string) => {
   const validStatuses = Object.values(OrderStatus);
   if (!validStatuses.includes(status as OrderStatus)) {
