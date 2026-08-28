@@ -20,6 +20,9 @@ export function OrderCard({ order, onClick }: OrderCardProps) {
   const config = statusConfig[order.status];
   const currentStepIndex = steps.indexOf(order.status);
 
+  const eta = order.estimatedAt ? new Date(order.estimatedAt) : null;
+  const isUpcoming = eta && eta > new Date() && order.status !== 'PICKED_UP' && order.status !== 'CANCELLED';
+
   return (
     <button
       onClick={onClick}
@@ -53,8 +56,22 @@ export function OrderCard({ order, onClick }: OrderCardProps) {
       )}
 
       <div className="flex items-center justify-between text-xs text-slate-500">
-        <span>₹{order.totalAmount}</span>
-        <span>{new Date(order.createdAt).toLocaleTimeString()}</span>
+        <div className="flex items-center gap-3">
+          <span>₹{order.totalAmount}</span>
+          {order.queueEntry && (
+            <span className="text-indigo-600 font-medium">
+              Q#{order.queueEntry.positionInQueue}
+            </span>
+          )}
+        </div>
+        <div className="flex items-center gap-3">
+          {isUpcoming && (
+            <span className="text-green-600 font-medium">
+              ETA {eta!.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+            </span>
+          )}
+          <span>{new Date(order.createdAt).toLocaleTimeString()}</span>
+        </div>
       </div>
     </button>
   );

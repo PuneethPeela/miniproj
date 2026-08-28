@@ -22,7 +22,8 @@ export const createItem = async (data: {
   price: number;
   category: string;
   imageUrl?: string;
-  prepTime?: number;
+  quantityAvailable?: number;
+  avgPrepSeconds?: number;
 }) => {
   return prisma.menuItem.create({ data });
 };
@@ -36,7 +37,8 @@ export const updateItem = async (
     category: string;
     imageUrl: string;
     available: boolean;
-    prepTime: number;
+    quantityAvailable: number;
+    avgPrepSeconds: number;
   }>
 ) => {
   const item = await prisma.menuItem.findUnique({ where: { id } });

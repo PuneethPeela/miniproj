@@ -22,3 +22,9 @@ export enum OrderStatus {
   PICKED_UP = "PICKED_UP",
   CANCELLED = "CANCELLED",
 }
+
+export enum QueueStage {
+  WAITING = "WAITING",
+  IN_KITCHEN = "IN_KITCHEN",
+  READY_FOR_PICKUP = "READY_FOR_PICKUP",
+}

@@ -14,7 +14,8 @@ export interface MenuItem {
   category: string;
   imageUrl?: string;
   available: boolean;
-  prepTime: number;
+  quantityAvailable: number;
+  avgPrepSeconds: number;
 }
 
 export interface OrderItem {
@@ -22,6 +23,14 @@ export interface OrderItem {
   quantity: number;
   menuItemId: string;
   menuItem?: MenuItem;
+}
+
+export interface QueueEntry {
+  id: string;
+  stage: QueueStage;
+  positionInQueue: number;
+  estimatedReadyAt?: string;
+  enteredStageAt: string;
 }
 
 export interface Order {
@@ -34,14 +43,23 @@ export interface Order {
   userId: string;
   user?: User;
   items: OrderItem[];
+  queueEntry?: QueueEntry;
 }
 
 export type OrderStatus = 'PENDING' | 'CONFIRMED' | 'PREPARING' | 'READY' | 'PICKED_UP' | 'CANCELLED';
+
+export type QueueStage = 'WAITING' | 'IN_KITCHEN' | 'READY_FOR_PICKUP';
 
 export interface QueueStatus {
   currentToken: number;
   estimatedWait: number;
   activeOrders: number;
+  entries?: {
+    position: number;
+    stage: QueueStage;
+    tokenNumber: number;
+    estimatedReadyAt?: string;
+  }[];
 }
 
 export interface CartItem {

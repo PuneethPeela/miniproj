@@ -1,4 +1,4 @@
-import { Users, Clock, Hash } from 'lucide-react';
+import { Users, Clock, Hash, ListOrdered } from 'lucide-react';
 import type { QueueStatus } from '../types';
 
 interface QueueDisplayProps {
@@ -14,6 +14,7 @@ export function QueueDisplay({ queue }: QueueDisplayProps) {
     );
   }
 
+  const entries = queue.entries ?? [];
   const progress = queue.activeOrders > 0
     ? ((queue.currentToken - queue.activeOrders) / queue.currentToken) * 100
     : 100;
@@ -40,12 +41,49 @@ export function QueueDisplay({ queue }: QueueDisplayProps) {
         </div>
       </div>
 
-      <div className="w-full bg-slate-200 rounded-full h-2">
+      <div className="w-full bg-slate-200 rounded-full h-2 mb-4">
         <div
           className="bg-indigo-600 h-2 rounded-full transition-all duration-500"
           style={{ width: `${Math.min(Math.max(progress, 0), 100)}%` }}
         />
       </div>
+
+      {entries.length > 0 && (
+        <div>
+          <div className="flex items-center gap-2 mb-2">
+            <ListOrdered className="h-4 w-4 text-slate-400" />
+            <span className="text-sm font-medium text-slate-700">Live Queue</span>
+          </div>
+          <div className="space-y-1.5 max-h-40 overflow-y-auto">
+            {entries.map((e) => (
+              <div
+                key={e.tokenNumber}
+                className="flex items-center justify-between text-sm py-1.5 px-3 bg-slate-50 rounded-lg"
+              >
+                <div className="flex items-center gap-2">
+                  <span className="font-bold text-indigo-600">#{e.tokenNumber}</span>
+                  <span className={`px-1.5 py-0.5 text-xs rounded-full ${
+                    e.stage === 'WAITING' ? 'bg-yellow-100 text-yellow-700' :
+                    e.stage === 'IN_KITCHEN' ? 'bg-blue-100 text-blue-700' :
+                    'bg-green-100 text-green-700'
+                  }`}>
+                    {e.stage === 'WAITING' ? 'Waiting' :
+                     e.stage === 'IN_KITCHEN' ? 'In Kitchen' : 'Ready'}
+                  </span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-slate-500">Q#{e.position}</span>
+                  {e.estimatedReadyAt && (
+                    <span className="text-xs text-green-600 font-medium">
+                      {new Date(e.estimatedReadyAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                    </span>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

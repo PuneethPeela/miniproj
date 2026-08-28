@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Plus, Pencil, Trash2, Clock, Save, X } from 'lucide-react';
+import { Plus, Pencil, Trash2, Clock, Save, X, Package } from 'lucide-react';
 import { toast } from 'sonner';
 import { menu as menuApi } from '../lib/api';
 import type { MenuItem } from '../types';
@@ -11,7 +11,8 @@ interface FormData {
   description: string;
   price: number;
   category: string;
-  prepTime: number;
+  quantityAvailable: number;
+  avgPrepSeconds: number;
   imageUrl: string;
 }
 
@@ -20,7 +21,8 @@ const emptyForm: FormData = {
   description: '',
   price: 0,
   category: CATEGORIES[0],
-  prepTime: 5,
+  quantityAvailable: 50,
+  avgPrepSeconds: 300,
   imageUrl: '',
 };
 
@@ -66,7 +68,8 @@ export function MenuManagementPage() {
       description: item.description || '',
       price: item.price,
       category: item.category,
-      prepTime: item.prepTime,
+      quantityAvailable: item.quantityAvailable,
+      avgPrepSeconds: item.avgPrepSeconds,
       imageUrl: item.imageUrl || '',
     });
     setEditingId(item.id);
@@ -91,7 +94,8 @@ export function MenuManagementPage() {
         description: form.description || undefined,
         price: form.price,
         category: form.category,
-        prepTime: form.prepTime,
+        quantityAvailable: form.quantityAvailable,
+        avgPrepSeconds: form.avgPrepSeconds,
         imageUrl: form.imageUrl || undefined,
       };
       if (editingId) {
@@ -188,7 +192,10 @@ export function MenuManagementPage() {
                 <div className="flex items-center gap-3 mt-1 text-sm">
                   <span className="font-bold text-slate-900">₹{item.price}</span>
                   <span className="flex items-center gap-1 text-slate-500">
-                    <Clock className="h-3 w-3" /> {item.prepTime}min
+                    <Clock className="h-3 w-3" /> {Math.round(item.avgPrepSeconds / 60)}min
+                  </span>
+                  <span className="flex items-center gap-1 text-slate-500">
+                    <Package className="h-3 w-3" /> {item.quantityAvailable}
                   </span>
                 </div>
               </div>
@@ -256,7 +263,7 @@ export function MenuManagementPage() {
                 />
               </div>
 
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-3 gap-3">
                 <div>
                   <label className="block text-sm font-medium text-slate-700 mb-1">Price (₹) *</label>
                   <input
@@ -268,13 +275,24 @@ export function MenuManagementPage() {
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1">Prep Time (min)</label>
+                  <label className="block text-sm font-medium text-slate-700 mb-1">Stock *</label>
                   <input
                     type="number"
-                    value={form.prepTime}
-                    onChange={(e) => setForm({ ...form, prepTime: Number(e.target.value) })}
+                    value={form.quantityAvailable}
+                    onChange={(e) => setForm({ ...form, quantityAvailable: Number(e.target.value) })}
                     className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                    min={1}
+                    min={0}
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-1">Prep (sec)</label>
+                  <input
+                    type="number"
+                    value={form.avgPrepSeconds}
+                    onChange={(e) => setForm({ ...form, avgPrepSeconds: Number(e.target.value) })}
+                    className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                    min={30}
+                    step={30}
                   />
                 </div>
               </div>

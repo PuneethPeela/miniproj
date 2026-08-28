@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion';
-import { Clock, Plus } from 'lucide-react';
+import { Clock, Plus, Package } from 'lucide-react';
 import type { MenuItem } from '../types';
 
 interface MenuItemCardProps {
@@ -8,6 +8,9 @@ interface MenuItemCardProps {
 }
 
 export function MenuItemCard({ item, onAddToCart }: MenuItemCardProps) {
+  const lowStock = item.quantityAvailable <= 5 && item.quantityAvailable > 0;
+  const outOfStock = item.quantityAvailable <= 0;
+
   return (
     <motion.div
       whileHover={{ y: -4 }}
@@ -34,12 +37,12 @@ export function MenuItemCard({ item, onAddToCart }: MenuItemCardProps) {
             <span className="text-lg font-bold text-slate-900">₹{item.price}</span>
             <span className="flex items-center gap-1 text-xs text-slate-500">
               <Clock className="h-3 w-3" />
-              {item.prepTime}min
+              {Math.round(item.avgPrepSeconds / 60)}min
             </span>
           </div>
           <button
             onClick={() => onAddToCart(item)}
-            disabled={!item.available}
+            disabled={outOfStock}
             className="flex items-center gap-1 px-3 py-1.5 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <Plus className="h-4 w-4" />
@@ -47,8 +50,17 @@ export function MenuItemCard({ item, onAddToCart }: MenuItemCardProps) {
           </button>
         </div>
 
-        {!item.available && (
-          <p className="mt-2 text-xs text-red-500 font-medium">Currently unavailable</p>
+        <div className="flex items-center gap-2 mt-2">
+          <Package className="h-3 w-3 text-slate-400" />
+          <span className={`text-xs font-medium ${
+            outOfStock ? 'text-red-500' : lowStock ? 'text-amber-500' : 'text-slate-500'
+          }`}>
+            {outOfStock ? 'Out of stock' : lowStock ? `Only ${item.quantityAvailable} left` : `${item.quantityAvailable} available`}
+          </span>
+        </div>
+
+        {outOfStock && (
+          <p className="mt-1 text-xs text-red-500 font-medium">Currently unavailable</p>
         )}
       </div>
     </motion.div>

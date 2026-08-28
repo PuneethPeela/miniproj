@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, PackageCheck, XCircle, Clock } from 'lucide-react';
+import { ArrowLeft, PackageCheck, XCircle, Clock, Hash } from 'lucide-react';
 import { toast } from 'sonner';
 import { orders as ordersApi } from '../lib/api';
 import type { Order } from '../types';
@@ -90,9 +90,16 @@ export function OrderPage() {
             <p className="text-sm text-slate-500">Token Number</p>
             <p className="text-3xl font-bold text-indigo-600">#{order.tokenNumber}</p>
           </div>
-          <span className={`text-lg font-semibold ${statusColors[order.status]}`}>
-            {order.status.replace('_', ' ')}
-          </span>
+          <div className="text-right">
+            <span className={`text-lg font-semibold ${statusColors[order.status]}`}>
+              {order.status.replace('_', ' ')}
+            </span>
+            {order.queueEntry && order.status !== 'PICKED_UP' && order.status !== 'CANCELLED' && (
+              <p className="text-sm text-slate-500 flex items-center justify-end gap-1 mt-1">
+                <Hash className="h-3 w-3" /> Queue #{order.queueEntry.positionInQueue}
+              </p>
+            )}
+          </div>
         </div>
 
         {order.status !== 'CANCELLED' && (
@@ -114,6 +121,11 @@ export function OrderPage() {
           <div className="mb-4 flex items-center gap-2 text-sm text-slate-600 bg-slate-50 rounded-lg p-3">
             <Clock className="h-4 w-4 text-indigo-500" />
             <span>Estimated ready by <strong>{eta.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</strong></span>
+            {order.queueEntry?.estimatedReadyAt && (
+              <span className="text-xs text-slate-400 ml-auto">
+                (Queue position: {order.queueEntry.positionInQueue})
+              </span>
+            )}
           </div>
         )}
 
