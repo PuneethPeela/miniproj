@@ -1,29 +1,32 @@
 import { useState, type FormEvent } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { UtensilsCrossed, Lock, User, ChefHat, Eye, EyeOff } from 'lucide-react';
+import { UtensilsCrossed, Lock, User, ChefHat, Eye, EyeOff, Shield } from 'lucide-react';
 import { toast } from 'sonner';
 import { useAuth } from '../hooks/useAuth';
 
-type Tab = 'student' | 'staff';
+type Tab = 'student' | 'staff' | 'manager';
 
 export function LoginPage() {
   const [tab, setTab] = useState<Tab>('student');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+  const [pin, setPin] = useState('');
+  const [showPin, setShowPin] = useState(false);
   const [loading, setLoading] = useState(false);
   const { login } = useAuth();
   const navigate = useNavigate();
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
-    if (!email || !password) {
+    const credentials = tab === 'manager' ? { field: email, extra: pin } : { field: email, extra: password };
+    if (!credentials.field || !credentials.extra) {
       toast.error('Please fill in all fields');
       return;
     }
     setLoading(true);
     try {
-      await login(email, password);
+      await login(email, tab === 'manager' ? pin : password);
       toast.success('Welcome back!');
       navigate(tab === 'student' ? '/' : '/kitchen');
     } catch (err) {
@@ -88,7 +91,7 @@ export function LoginPage() {
           <div className="bg-white rounded-b-2xl shadow-xl">
             <div className="flex border-b border-slate-200">
               <button
-                onClick={() => { setTab('student'); setEmail('student@college.edu'); }}
+                onClick={() => { setTab('student'); setEmail('student@college.edu'); setPassword(''); setPin(''); }}
                 className={`flex-1 flex items-center justify-center gap-2 py-3.5 text-sm font-semibold transition-colors ${
                   tab === 'student'
                     ? 'text-indigo-600 border-b-2 border-indigo-600 bg-indigo-50/50'
@@ -99,7 +102,7 @@ export function LoginPage() {
                 Student
               </button>
               <button
-                onClick={() => { setTab('staff'); setEmail('kitchen@college.edu'); }}
+                onClick={() => { setTab('staff'); setEmail('kitchen@college.edu'); setPassword(''); setPin(''); }}
                 className={`flex-1 flex items-center justify-center gap-2 py-3.5 text-sm font-semibold transition-colors ${
                   tab === 'staff'
                     ? 'text-indigo-600 border-b-2 border-indigo-600 bg-indigo-50/50'
@@ -107,17 +110,28 @@ export function LoginPage() {
                 }`}
               >
                 <ChefHat className="h-4 w-4" />
-                Staff & Manager
+                Staff
+              </button>
+              <button
+                onClick={() => { setTab('manager'); setEmail('kitchen@college.edu'); setPassword(''); setPin(''); }}
+                className={`flex-1 flex items-center justify-center gap-2 py-3.5 text-sm font-semibold transition-colors ${
+                  tab === 'manager'
+                    ? 'text-indigo-600 border-b-2 border-indigo-600 bg-indigo-50/50'
+                    : 'text-slate-500 hover:text-slate-700'
+                }`}
+              >
+                <Shield className="h-4 w-4" />
+                Manager
               </button>
             </div>
 
             {/* Quick Login Profiles */}
             <div className="px-6 pt-5 pb-3">
               <p className="text-xs font-semibold text-slate-400 tracking-wider uppercase mb-3">
-                {tab === 'student' ? 'Quick Access — Demo Profiles' : 'Quick Access — Staff Accounts'}
+                {tab === 'student' ? 'Quick Access — Demo Profiles' : tab === 'manager' ? 'Quick Access — Manager Accounts' : 'Quick Access — Staff Accounts'}
               </p>
               <div className="grid grid-cols-2 gap-2">
-                {tab === 'student' ? (
+                {tab === 'student' && (
                   <>
                     <QuickProfile
                       name="Rahul Kumar"
@@ -134,12 +148,13 @@ export function LoginPage() {
                       disabled={loading}
                     />
                   </>
-                ) : (
+                )}
+                {tab === 'staff' && (
                   <>
                     <QuickProfile
                       name="Kitchen Staff"
                       dept="Canteen Operations"
-                      role="MANAGER"
+                      role="STAFF"
                       onClick={() => quickLogin('kitchen@college.edu', 'KITCHEN_STAFF')}
                       disabled={loading}
                     />
@@ -148,6 +163,24 @@ export function LoginPage() {
                       dept="Kitchen Station #1"
                       role="STAFF"
                       onClick={() => quickLogin('kitchen@college.edu', 'KITCHEN_STAFF')}
+                      disabled={loading}
+                    />
+                  </>
+                )}
+                {tab === 'manager' && (
+                  <>
+                    <QuickProfile
+                      name="Canteen Manager"
+                      dept="Administration"
+                      role="MANAGER"
+                      onClick={() => quickLogin('kitchen@college.edu', 'MANAGER')}
+                      disabled={loading}
+                    />
+                    <QuickProfile
+                      name="Head Chef"
+                      dept="Kitchen Management"
+                      role="MANAGER"
+                      onClick={() => quickLogin('kitchen@college.edu', 'MANAGER')}
                       disabled={loading}
                     />
                   </>
@@ -171,7 +204,7 @@ export function LoginPage() {
             <form onSubmit={handleSubmit} className="px-6 pb-6 space-y-4">
               <div>
                 <label className="block text-sm font-medium text-slate-700 mb-1.5">
-                  {tab === 'student' ? 'Email Address' : 'Staff Email or Official ID'}
+                  {tab === 'student' ? 'Email Address' : tab === 'manager' ? 'Manager Email' : 'Staff Email or Official ID'}
                 </label>
                 <div className="relative">
                   <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
@@ -186,29 +219,56 @@ export function LoginPage() {
                 </div>
               </div>
 
-              <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1.5">
-                  Password
-                </label>
-                <div className="relative">
-                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
-                  <input
-                    type={showPassword ? 'text' : 'password'}
-                    required
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    className="w-full pl-10 pr-10 py-2.5 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent bg-slate-50"
-                    placeholder="Enter your password"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
-                  >
-                    {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                  </button>
+              {tab === 'manager' ? (
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-1.5">
+                    Security PIN
+                  </label>
+                  <div className="relative">
+                    <Shield className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+                    <input
+                      type={showPin ? 'text' : 'password'}
+                      required
+                      value={pin}
+                      onChange={(e) => setPin(e.target.value)}
+                      className="w-full pl-10 pr-10 py-2.5 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent bg-slate-50"
+                      placeholder="Enter your security PIN"
+                      maxLength={6}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPin(!showPin)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+                    >
+                      {showPin ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                    </button>
+                  </div>
                 </div>
-              </div>
+              ) : (
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-1.5">
+                    Password
+                  </label>
+                  <div className="relative">
+                    <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+                    <input
+                      type={showPassword ? 'text' : 'password'}
+                      required
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      className="w-full pl-10 pr-10 py-2.5 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent bg-slate-50"
+                      placeholder="Enter your password"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+                    >
+                      {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                    </button>
+                  </div>
+                </div>
+              )}
 
               <button
                 type="submit"
@@ -222,14 +282,14 @@ export function LoginPage() {
                   </span>
                 ) : (
                   <span className="flex items-center justify-center gap-2">
-                    {tab === 'student' ? 'Enter Student Workspace' : 'Authorize & Enter Kitchen'}
+                    {tab === 'student' ? 'Enter Student Workspace' : tab === 'manager' ? 'Access Manager Dashboard' : 'Authorize & Enter Kitchen'}
                     →
                   </span>
                 )}
               </button>
 
               <p className="text-center text-xs text-slate-400">
-                Demo mode: any password works with the demo emails above
+                Demo mode: any {tab === 'manager' ? 'PIN' : 'password'} works with the demo emails above
               </p>
             </form>
 

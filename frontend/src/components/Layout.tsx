@@ -1,5 +1,5 @@
 import { NavLink, Outlet } from 'react-router-dom';
-import { UtensilsCrossed, Clock, ChefHat, LayoutGrid, LogOut, User, Utensils, Package } from 'lucide-react';
+import { UtensilsCrossed, Clock, ChefHat, LayoutGrid, LogOut, Utensils } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
 
 const studentLinks = [

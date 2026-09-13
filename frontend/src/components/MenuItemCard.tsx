@@ -16,8 +16,12 @@ export function MenuItemCard({ item, onAddToCart }: MenuItemCardProps) {
       whileHover={{ y: -4 }}
       className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden"
     >
-      {item.imageUrl && (
+      {item.imageUrl ? (
         <img src={item.imageUrl} alt={item.name} className="w-full h-40 object-cover" />
+      ) : (
+        <div className="w-full h-40 bg-gradient-to-br from-indigo-100 to-indigo-200 flex items-center justify-center">
+          <span className="text-4xl">🍽️</span>
+        </div>
       )}
       <div className="p-4">
         <div className="flex items-start justify-between gap-2">

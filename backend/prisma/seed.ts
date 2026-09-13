@@ -57,7 +57,7 @@ async function main() {
       category: "Rice Bowls",
       quantityAvailable: 30,
       avgPrepSeconds: 900,
-      imageUrl: "https://images.unsplash.com/photo-1563379091339-03b21ab4a4f8?w=400",
+      imageUrl: "https://images.unsplash.com/photo-1563379091339-03b21ab4a4f8?w=600&auto=format&fit=crop&q=80",
     },
     {
       name: "Paneer Butter Masala Bowl",
@@ -66,7 +66,7 @@ async function main() {
       category: "Rice Bowls",
       quantityAvailable: 25,
       avgPrepSeconds: 600,
-      imageUrl: "https://images.unsplash.com/photo-1631452180519-c014fe946bc7?w=400",
+      imageUrl: "https://images.unsplash.com/photo-1631452180519-c014fe946bc7?w=600&auto=format&fit=crop&q=80",
     },
     {
       name: "Egg Fried Rice Bowl",
@@ -75,7 +75,7 @@ async function main() {
       category: "Rice Bowls",
       quantityAvailable: 35,
       avgPrepSeconds: 480,
-      imageUrl: "https://images.unsplash.com/photo-1603133872878-684f208fb84b?w=400",
+      imageUrl: "https://images.unsplash.com/photo-1603133872878-684f208fb84b?w=600&auto=format&fit=crop&q=80",
     },
     {
       name: "Samosa (2 pcs)",
@@ -84,7 +84,7 @@ async function main() {
       category: "Snacks",
       quantityAvailable: 50,
       avgPrepSeconds: 300,
-      imageUrl: "https://images.unsplash.com/photo-1601050690597-df0568f70950?w=400",
+      imageUrl: "https://images.unsplash.com/photo-1601050690597-df0568f70950?w=600&auto=format&fit=crop&q=80",
     },
     {
       name: "Veg Spring Rolls (4 pcs)",
@@ -93,7 +93,7 @@ async function main() {
       category: "Snacks",
       quantityAvailable: 40,
       avgPrepSeconds: 420,
-      imageUrl: "https://images.unsplash.com/photo-1606525436861-e28d2066679a?w=400",
+      imageUrl: "https://images.unsplash.com/photo-1606525436861-e28d2066679a?w=600&auto=format&fit=crop&q=80",
     },
     {
       name: "Chicken Momos (8 pcs)",
@@ -102,7 +102,7 @@ async function main() {
       category: "Snacks",
       quantityAvailable: 20,
       avgPrepSeconds: 720,
-      imageUrl: "https://images.unsplash.com/photo-1529692236671-f1f6cf9683ba?w=400",
+      imageUrl: "https://images.unsplash.com/photo-1529692236671-f1f6cf9683ba?w=600&auto=format&fit=crop&q=80",
     },
     {
       name: "Masala Chai",
@@ -111,7 +111,7 @@ async function main() {
       category: "Drinks",
       quantityAvailable: 100,
       avgPrepSeconds: 180,
-      imageUrl: "https://images.unsplash.com/photo-1564890369478-c89ca6d9cde9?w=400",
+      imageUrl: "https://images.unsplash.com/photo-1576092768241-dec231879fc3?w=600&auto=format&fit=crop&q=80",
     },
     {
       name: "Mango Lassi",
@@ -120,7 +120,7 @@ async function main() {
       category: "Drinks",
       quantityAvailable: 60,
       avgPrepSeconds: 180,
-      imageUrl: "https://images.unsplash.com/photo-1527661591475-527312dd65f5?w=400",
+      imageUrl: "https://images.unsplash.com/photo-1576092768241-dec231879fc3?w=600&auto=format&fit=crop&q=80",
     },
     {
       name: "Cold Coffee",
@@ -129,7 +129,7 @@ async function main() {
       category: "Drinks",
       quantityAvailable: 45,
       avgPrepSeconds: 240,
-      imageUrl: "https://images.unsplash.com/photo-1461023058943-07fcbe16d735?w=400",
+      imageUrl: "https://images.unsplash.com/photo-1576092768241-dec231879fc3?w=600&auto=format&fit=crop&q=80",
     },
     {
       name: "Chocolate Brownie",
@@ -138,7 +138,7 @@ async function main() {
       category: "Desserts",
       quantityAvailable: 15,
       avgPrepSeconds: 120,
-      imageUrl: "https://images.unsplash.com/photo-1606313564200-e75d5e30476c?w=400",
+      imageUrl: "https://images.unsplash.com/photo-1589301760014-d929f3979dbc?w=600&auto=format&fit=crop&q=80",
     },
   ];
 
