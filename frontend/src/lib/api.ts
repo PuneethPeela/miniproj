@@ -88,7 +88,7 @@ export const orders = {
 };
 
 export const queue = {
-  getStatus: () => request<import('../types').QueueStatus>('/queue/status'),
+  getStatus: () => request<import('../types').QueueStatus>('/queue'),
 };
 
 export interface DashboardStats {
