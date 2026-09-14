@@ -1,5 +1,5 @@
 import { NavLink, Outlet } from 'react-router-dom';
-import { UtensilsCrossed, Clock, ChefHat, LayoutGrid, LogOut, Utensils } from 'lucide-react';
+import { UtensilsCrossed, Clock, ChefHat, LayoutGrid, LogOut, Utensils, Package, DollarSign } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
 
 const studentLinks = [
@@ -9,7 +9,9 @@ const studentLinks = [
 
 const kitchenLinks = [
   { to: '/kitchen', icon: ChefHat, label: 'Kitchen' },
-  { to: '/kitchen/menu', icon: Utensils, label: 'Manage' },
+  { to: '/kitchen/menu', icon: Utensils, label: 'Menu' },
+  { to: '/kitchen/inventory', icon: Package, label: 'Inventory' },
+  { to: '/kitchen/pricing', icon: DollarSign, label: 'Pricing' },
   { to: '/orders', icon: Clock, label: 'Queue' },
 ];
 
@@ -17,11 +19,12 @@ const roleLabels: Record<string, string> = {
   STUDENT: 'Student',
   KITCHEN_STAFF: 'Kitchen Staff',
   MANAGER: 'Manager',
+  PROFESSOR: 'Professor',
 };
 
 export function Layout() {
   const { user, logout } = useAuth();
-  const links = user?.role === 'KITCHEN_STAFF' || user?.role === 'MANAGER' ? kitchenLinks : studentLinks;
+  const links = user?.role === 'KITCHEN_STAFF' || user?.role === 'MANAGER' || user?.role === 'PROFESSOR' ? kitchenLinks : studentLinks;
 
   return (
     <div className="min-h-screen bg-slate-50">

@@ -13,8 +13,11 @@ export const createOrder = async (
       return;
     }
 
-    const { items } = req.body;
-    const order = await orderService.createOrder(req.user.id, items);
+    const { items, paymentMethod, pickupSlot } = req.body;
+    const order = await orderService.createOrder(req.user.id, items, {
+      paymentMethod,
+      pickupSlot,
+    });
     res.status(201).json({ success: true, data: order });
   } catch (error) {
     next(error);
@@ -81,6 +84,28 @@ export const getAllActiveOrders = async (
   try {
     const orders = await orderService.getAllActiveOrders();
     res.json({ success: true, data: orders });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const collectOrderItem = async (
+  req: AuthRequest,
+  res: Response,
+  next: NextFunction
+): Promise<void> => {
+  try {
+    if (!req.user) {
+      res.status(401).json({ success: false, error: "Not authenticated" });
+      return;
+    }
+    const { id, itemId } = req.params;
+    const order = await orderService.collectOrderItem(
+      id as string,
+      itemId as string,
+      req.user.id
+    );
+    res.json({ success: true, data: order });
   } catch (error) {
     next(error);
   }

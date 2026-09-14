@@ -38,7 +38,8 @@ const calculateDynamicETA = async (prepSeconds: number): Promise<Date> => {
 
 export const createOrder = async (
   userId: string,
-  items: { menuItemId: string; quantity: number }[]
+  items: { menuItemId: string; quantity: number }[],
+  options?: { paymentMethod?: string; pickupSlot?: string }
 ) => {
   if (!items || items.length === 0) {
     throw new AppError("Order must contain at least one item", 400);
@@ -83,21 +84,28 @@ export const createOrder = async (
 
     const estimatedAt = await calculateDynamicETA(maxPrepSeconds);
 
+    // Calculate payment status based on method
+    const paymentStatus = options?.paymentMethod === "cash" ? "pending" : "pending";
+
     const order = await tx.order.create({
       data: {
         userId,
         totalAmount,
         estimatedAt,
+        paymentMethod: options?.paymentMethod || "cash",
+        paymentStatus,
+        pickupSlot: options?.pickupSlot || "immediate",
         items: {
           create: items.map((item) => ({
             menuItemId: item.menuItemId,
             quantity: item.quantity,
+            collected: false,
           })),
         },
       },
       include: {
         items: { include: { menuItem: true } },
-        user: { select: { id: true, name: true, email: true } },
+        user: { select: { id: true, name: true, email: true, rollNumber: true } },
       },
     });
 
@@ -137,7 +145,7 @@ export const getOrderById = async (id: string, userId?: string) => {
     where,
     include: {
       items: { include: { menuItem: true } },
-      user: { select: { id: true, name: true, email: true } },
+      user: { select: { id: true, name: true, email: true, rollNumber: true } },
       queueEntry: true,
     },
   });
@@ -154,6 +162,7 @@ export const getUserOrders = async (userId: string) => {
     where: { userId },
     include: {
       items: { include: { menuItem: true } },
+      user: { select: { id: true, name: true, email: true, rollNumber: true } },
       queueEntry: true,
     },
     orderBy: { createdAt: "desc" },
@@ -189,7 +198,7 @@ export const updateOrderStatus = async (id: string, status: string) => {
       data: { status: status as OrderStatus },
       include: {
         items: { include: { menuItem: true } },
-        user: { select: { id: true, name: true, email: true } },
+        user: { select: { id: true, name: true, email: true, rollNumber: true } },
         queueEntry: true,
       },
     });
@@ -224,7 +233,7 @@ export const getAllActiveOrders = async () => {
     where: { status: { notIn: ["PICKED_UP", "CANCELLED"] } },
     include: {
       items: { include: { menuItem: true } },
-      user: { select: { id: true, name: true, email: true } },
+      user: { select: { id: true, name: true, email: true, rollNumber: true } },
       queueEntry: true,
     },
     orderBy: { createdAt: "asc" },
@@ -243,7 +252,7 @@ export const pickUpOrder = async (id: string, userId: string) => {
       data: { status: "PICKED_UP" },
       include: {
         items: { include: { menuItem: true } },
-        user: { select: { id: true, name: true, email: true } },
+        user: { select: { id: true, name: true, email: true, rollNumber: true } },
         queueEntry: true,
       },
     });
@@ -290,7 +299,7 @@ export const cancelOrder = async (id: string, userId: string) => {
       data: { status: "CANCELLED" },
       include: {
         items: { include: { menuItem: true } },
-        user: { select: { id: true, name: true, email: true } },
+        user: { select: { id: true, name: true, email: true, rollNumber: true } },
         queueEntry: true,
       },
     });
@@ -309,6 +318,64 @@ export const cancelOrder = async (id: string, userId: string) => {
   try {
     emitOrderUpdate(id, "CANCELLED", updatedOrder as unknown as Record<string, unknown>);
   } catch {}
+
+  return updatedOrder;
+};
+
+// ── Item-Level Collection ───────────────────────────────────────────────
+
+export const collectOrderItem = async (
+  orderId: string,
+  orderItemId: string,
+  userId: string
+) => {
+  const order = await prisma.order.findUnique({ where: { id: orderId } });
+  if (!order) throw new AppError("Order not found", 404);
+  if (order.userId !== userId) throw new AppError("Not authorized", 403);
+  if (order.status !== "READY") throw new AppError("Order is not ready for pickup", 400);
+
+  // Verify the order item belongs to this order
+  const orderItem = await prisma.orderItem.findFirst({
+    where: { id: orderItemId, orderId },
+  });
+  if (!orderItem) throw new AppError("Order item not found", 404);
+  if (orderItem.collected) throw new AppError("Item already collected", 400);
+
+  // Mark item as collected
+  await prisma.orderItem.update({
+    where: { id: orderItemId },
+    data: { collected: true },
+  });
+
+  // Check if all items are now collected
+  const allItems = await prisma.orderItem.findMany({ where: { orderId } });
+  const allCollected = allItems.every((item) => item.collected);
+
+  // If all items collected, mark order as PICKED_UP
+  if (allCollected) {
+    await prisma.order.update({
+      where: { id: orderId },
+      data: { status: "PICKED_UP" },
+    });
+  }
+
+  // Return updated order
+  const updatedOrder = await prisma.order.findUnique({
+    where: { id: orderId },
+    include: {
+      items: { include: { menuItem: true } },
+      user: { select: { id: true, name: true, email: true, rollNumber: true } },
+      queueEntry: true,
+    },
+  });
+
+  if (allCollected) {
+    await updateQueueStatus();
+    await recalculateETAs();
+    try {
+      emitOrderUpdate(orderId, "PICKED_UP", updatedOrder as unknown as Record<string, unknown>);
+    } catch {}
+  }
 
   return updatedOrder;
 };

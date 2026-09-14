@@ -178,7 +178,7 @@ export function LoginPage() {
             {/* Tab Bar */}
             <div className="flex border-b border-slate-200 rounded-t-2xl">
               <button
-                onClick={() => { setTab('student'); setEmail('student@college.edu'); setPassword(''); setPin(''); }}
+                onClick={() => { setTab('student'); setEmail('cse24733206@matrusri.edu.in'); setPassword(''); setPin(''); }}
                 className={`flex-1 flex items-center justify-center gap-2 py-3.5 text-sm font-semibold transition-colors ${
                   tab === 'student'
                     ? 'text-indigo-600 border-b-2 border-indigo-600 bg-indigo-50/50'
@@ -189,7 +189,7 @@ export function LoginPage() {
                 Student
               </button>
               <button
-                onClick={() => { setTab('staff'); setEmail('kitchen@college.edu'); setPassword(''); setPin(''); }}
+                onClick={() => { setTab('staff'); setEmail('staff@matrusri.edu.in'); setPassword(''); setPin(''); }}
                 className={`flex-1 flex items-center justify-center gap-2 py-3.5 text-sm font-semibold transition-colors ${
                   tab === 'staff'
                     ? 'text-indigo-600 border-b-2 border-indigo-600 bg-indigo-50/50'
@@ -222,16 +222,16 @@ export function LoginPage() {
                   <>
                     <QuickProfile
                       name="Rahul Kumar"
-                      dept="Computer Science"
+                      dept="CSE — 206"
                       role="STUDENT"
-                      onClick={() => quickLogin('student@college.edu', 'STUDENT')}
+                      onClick={() => quickLogin('cse24733206@matrusri.edu.in', 'STUDENT')}
                       disabled={loading}
                     />
                     <QuickProfile
                       name="Priya Sharma"
-                      dept="Kitchen Staff"
-                      role="STAFF"
-                      onClick={() => quickLogin('kitchen@college.edu', 'KITCHEN_STAFF')}
+                      dept="CSE — 207"
+                      role="STUDENT"
+                      onClick={() => quickLogin('cse24733207@matrusri.edu.in', 'STUDENT')}
                       disabled={loading}
                     />
                   </>
@@ -242,14 +242,14 @@ export function LoginPage() {
                       name="Kitchen Staff"
                       dept="Canteen Operations"
                       role="STAFF"
-                      onClick={() => quickLogin('kitchen@college.edu', 'KITCHEN_STAFF')}
+                      onClick={() => quickLogin('staff@matrusri.edu.in', 'KITCHEN_STAFF')}
                       disabled={loading}
                     />
                     <QuickProfile
                       name="Chef Account"
                       dept="Kitchen Station #1"
                       role="STAFF"
-                      onClick={() => quickLogin('kitchen@college.edu', 'KITCHEN_STAFF')}
+                      onClick={() => quickLogin('staff@matrusri.edu.in', 'KITCHEN_STAFF')}
                       disabled={loading}
                     />
                   </>
@@ -260,14 +260,14 @@ export function LoginPage() {
                       name="Canteen Manager"
                       dept="Administration"
                       role="MANAGER"
-                      onClick={() => quickLogin('kitchen@college.edu', 'MANAGER')}
+                      onClick={() => quickLogin('manager@matrusri.edu.in', 'MANAGER')}
                       disabled={loading}
                     />
                     <QuickProfile
-                      name="Head Chef"
-                      dept="Kitchen Management"
-                      role="MANAGER"
-                      onClick={() => quickLogin('kitchen@college.edu', 'MANAGER')}
+                      name="Dr. Professor"
+                      dept="Faculty"
+                      role="PROFESSOR"
+                      onClick={() => quickLogin('prof@matrusri.edu.in', 'PROFESSOR')}
                       disabled={loading}
                     />
                   </>
@@ -289,7 +289,7 @@ export function LoginPage() {
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     className="w-full pl-10 pr-4 py-2.5 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent bg-slate-50"
-                    placeholder={tab === 'student' ? 'student@college.edu' : 'kitchen@college.edu'}
+                    placeholder="you@matrusri.edu.in"
                   />
                 </div>
               </div>

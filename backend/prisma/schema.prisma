@@ -16,6 +16,7 @@ enum Role {
   STUDENT
   KITCHEN_STAFF
   MANAGER
+  PROFESSOR
 }
 
 enum OrderStatus {
@@ -76,13 +77,16 @@ model MenuItem {
 }
 
 model Order {
-  id          String      @id @default(cuid())
-  tokenNumber Int         @unique @default(autoincrement()) @map("token_number")
-  status      OrderStatus @default(PENDING)
-  totalAmount Float       @map("total_amount")
-  estimatedAt DateTime?   @map("estimated_at")
-  createdAt   DateTime    @default(now()) @map("created_at")
-  updatedAt   DateTime    @updatedAt      @map("updated_at")
+  id             String      @id @default(cuid())
+  tokenNumber    Int         @unique @default(autoincrement()) @map("token_number")
+  status         OrderStatus @default(PENDING)
+  totalAmount    Float       @map("total_amount")
+  estimatedAt    DateTime?   @map("estimated_at")
+  paymentMethod  String?     @map("payment_method") // "upi", "campus_card", "cash"
+  paymentStatus  String      @default("pending") @map("payment_status") // "pending", "paid"
+  pickupSlot     String?     @map("pickup_slot") // "immediate", "15min", "30min", "1hr"
+  createdAt      DateTime    @default(now()) @map("created_at")
+  updatedAt      DateTime    @updatedAt       @map("updated_at")
 
   userId String @map("user_id")
   user   User   @relation(fields: [userId], references: [id])
@@ -94,8 +98,9 @@ model Order {
 }
 
 model OrderItem {
-  id       String @id @default(cuid())
-  quantity Int
+  id        String  @id @default(cuid())
+  quantity  Int
+  collected Boolean @default(false) @map("collected")
 
   orderId    String   @map("order_id")
   order      Order    @relation(fields: [orderId], references: [id])

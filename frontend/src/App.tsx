@@ -8,10 +8,13 @@ import { RegisterPage } from './pages/RegisterPage';
 import { CompleteProfilePage } from './pages/CompleteProfilePage';
 import { ForgotPasswordPage } from './pages/ForgotPasswordPage';
 import { MenuPage } from './pages/MenuPage';
+import { CheckoutPage } from './pages/CheckoutPage';
 import { QueuePage } from './pages/QueuePage';
 import { OrderPage } from './pages/OrderPage';
 import { KitchenDashboard } from './pages/KitchenDashboard';
 import { MenuManagementPage } from './pages/MenuManagementPage';
+import { InventoryPage } from './pages/InventoryPage';
+import { PriceManagementPage } from './pages/PriceManagementPage';
 
 export default function App() {
   return (
@@ -33,10 +36,13 @@ export default function App() {
               <Route element={<Layout />}>
                 <Route path="/" element={<MenuPage />} />
                 <Route path="/menu" element={<MenuPage />} />
+                <Route path="/checkout" element={<CheckoutPage />} />
                 <Route path="/orders" element={<QueuePage />} />
                 <Route path="/orders/:id" element={<OrderPage />} />
                 <Route path="/kitchen" element={<KitchenDashboard />} />
                 <Route path="/kitchen/menu" element={<MenuManagementPage />} />
+                <Route path="/kitchen/inventory" element={<InventoryPage />} />
+                <Route path="/kitchen/pricing" element={<PriceManagementPage />} />
               </Route>
             </Route>
           </Routes>

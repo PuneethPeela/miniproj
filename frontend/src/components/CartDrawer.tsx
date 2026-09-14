@@ -1,5 +1,6 @@
+import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Minus, Plus, ShoppingBag } from 'lucide-react';
+import { X, Minus, Plus, ShoppingBag, ArrowRight } from 'lucide-react';
 import type { CartItem } from '../types';
 
 interface CartDrawerProps {
@@ -8,8 +9,6 @@ interface CartDrawerProps {
   items: CartItem[];
   onUpdateQuantity: (menuItemId: string, quantity: number) => void;
   onRemoveItem: (menuItemId: string) => void;
-  onPlaceOrder: () => void;
-  placing: boolean;
 }
 
 export function CartDrawer({
@@ -18,10 +17,16 @@ export function CartDrawer({
   items,
   onUpdateQuantity,
   onRemoveItem,
-  onPlaceOrder,
-  placing,
 }: CartDrawerProps) {
+  const navigate = useNavigate();
   const total = items.reduce((sum, item) => sum + item.menuItem.price * item.quantity, 0);
+  const itemCount = items.reduce((sum, item) => sum + item.quantity, 0);
+
+  const handleCheckout = () => {
+    onClose();
+    // Pass cart data via navigation state
+    navigate('/checkout', { state: { cart: items, total } });
+  };
 
   return (
     <AnimatePresence>
@@ -96,15 +101,15 @@ export function CartDrawer({
             {items.length > 0 && (
               <div className="border-t border-slate-200 p-4 space-y-3">
                 <div className="flex items-center justify-between">
-                  <span className="text-sm font-medium text-slate-600">Total</span>
+                  <span className="text-sm font-medium text-slate-600">{itemCount} items</span>
                   <span className="text-lg font-bold text-slate-900">₹{total}</span>
                 </div>
                 <button
-                  onClick={onPlaceOrder}
-                  disabled={placing}
-                  className="w-full py-3 bg-indigo-600 text-white font-medium rounded-lg hover:bg-indigo-700 transition-colors disabled:opacity-50"
+                  onClick={handleCheckout}
+                  className="w-full py-3 bg-indigo-600 text-white font-medium rounded-lg hover:bg-indigo-700 transition-colors flex items-center justify-center gap-2"
                 >
-                  {placing ? 'Placing Order...' : 'Place Order'}
+                  Proceed to Checkout
+                  <ArrowRight className="h-4 w-4" />
                 </button>
               </div>
             )}

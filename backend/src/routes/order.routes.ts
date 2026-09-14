@@ -19,7 +19,7 @@ router.get("/", authenticate, orderController.getUserOrders);
 router.get(
   "/active/all",
   authenticate,
-  authorize("KITCHEN_STAFF"),
+  authorize("KITCHEN_STAFF", "MANAGER", "PROFESSOR"),
   orderController.getAllActiveOrders
 );
 
@@ -28,11 +28,17 @@ router.get("/:id", authenticate, orderController.getOrderById);
 router.put(
   "/:id/status",
   authenticate,
-  authorize("KITCHEN_STAFF"),
+  authorize("KITCHEN_STAFF", "MANAGER", "PROFESSOR"),
   validate([
     { field: "status", label: "Status", required: true, type: "string" },
   ]),
   orderController.updateOrderStatus
+);
+
+router.put(
+  "/:id/items/:itemId/collect",
+  authenticate,
+  orderController.collectOrderItem
 );
 
 router.put("/:id/pickup", authenticate, orderController.pickUpOrder);

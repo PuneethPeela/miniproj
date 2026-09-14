@@ -3,7 +3,7 @@ export interface User {
   name: string;
   email: string;
   rollNumber?: string;
-  role: 'STUDENT' | 'KITCHEN_STAFF' | 'MANAGER';
+  role: 'STUDENT' | 'KITCHEN_STAFF' | 'MANAGER' | 'PROFESSOR';
   provider?: string;
   profileComplete?: boolean;
   createdAt: string;
@@ -24,6 +24,7 @@ export interface MenuItem {
 export interface OrderItem {
   id: string;
   quantity: number;
+  collected: boolean;
   menuItemId: string;
   menuItem?: MenuItem;
 }
@@ -42,6 +43,9 @@ export interface Order {
   status: OrderStatus;
   totalAmount: number;
   estimatedAt?: string;
+  paymentMethod?: string;
+  paymentStatus?: string;
+  pickupSlot?: string;
   createdAt: string;
   userId: string;
   user?: User;

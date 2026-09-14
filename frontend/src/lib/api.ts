@@ -93,10 +93,10 @@ export const menu = {
 };
 
 export const orders = {
-  create: (items: { menuItemId: string; quantity: number }[]) =>
+  create: (items: { menuItemId: string; quantity: number }[], options?: { paymentMethod?: string; pickupSlot?: string }) =>
     request<import('../types').Order>('/orders', {
       method: 'POST',
-      body: JSON.stringify({ items }),
+      body: JSON.stringify({ items, ...options }),
     }),
 
   getAll: () => request<import('../types').Order[]>('/orders'),
@@ -109,6 +109,11 @@ export const orders = {
     request<import('../types').Order>(`/orders/${id}/status`, {
       method: 'PUT',
       body: JSON.stringify({ status }),
+    }),
+
+  collectItem: (orderId: string, orderItemId: string) =>
+    request<import('../types').Order>(`/orders/${orderId}/items/${orderItemId}/collect`, {
+      method: 'PUT',
     }),
 
   pickUp: (id: string) =>

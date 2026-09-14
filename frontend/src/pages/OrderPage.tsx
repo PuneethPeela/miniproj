@@ -1,17 +1,16 @@
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, PackageCheck, XCircle, Clock, Hash, Receipt } from 'lucide-react';
+import { ArrowLeft, PackageCheck, XCircle, Clock, Hash, Check, CheckCircle } from 'lucide-react';
 import { toast } from 'sonner';
 import { orders as ordersApi } from '../lib/api';
-import type { Order } from '../types';
+import type { Order, OrderItem } from '../types';
 import { useSocket } from '../hooks/useSocket';
+import { useAuth } from '../hooks/useAuth';
 
-const statusSteps: { key: Order['status']; label: string }[] = [
-  { key: 'PENDING', label: 'Placed' },
-  { key: 'CONFIRMED', label: 'Confirmed' },
-  { key: 'PREPARING', label: 'Preparing' },
-  { key: 'READY', label: 'Ready' },
-  { key: 'PICKED_UP', label: 'Picked Up' },
+const statusSteps: { key: string; label: string }[] = [
+  { key: 'cooking', label: 'Cooking' },
+  { key: 'ready', label: 'Ready for Pickup' },
+  { key: 'collected', label: 'Collected' },
 ];
 
 const statusColors: Record<Order['status'], string> = {
@@ -29,6 +28,7 @@ export function OrderPage() {
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState(false);
   const { socket } = useSocket();
+  const { user } = useAuth();
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -48,6 +48,20 @@ export function OrderPage() {
       socket.emit('leave:order', id);
     };
   }, [id, socket]);
+
+  const handleCollectItem = async (orderItemId: string) => {
+    if (!id) return;
+    setActionLoading(true);
+    try {
+      const updated = await ordersApi.collectItem(id, orderItemId);
+      setOrder(updated);
+      toast.success('Item marked as collected!');
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Failed to collect item');
+    } finally {
+      setActionLoading(false);
+    }
+  };
 
   const handlePickUp = async () => {
     if (!id) return;
@@ -90,7 +104,7 @@ export function OrderPage() {
   if (!order) {
     return (
       <div className="max-w-lg mx-auto text-center py-12">
-        <Receipt className="h-12 w-12 mx-auto text-slate-300 mb-3" />
+        <PackageCheck className="h-12 w-12 mx-auto text-slate-300 mb-3" />
         <p className="text-slate-500 font-medium">Order not found</p>
         <button onClick={() => navigate('/')} className="mt-3 text-sm text-indigo-600 hover:underline">
           Back to Menu
@@ -99,9 +113,22 @@ export function OrderPage() {
     );
   }
 
-  const currentIndex = statusSteps.findIndex((s) => s.key === order.status);
+  // Calculate progress based on item collection
+  const totalItems = order.items.length;
+  const collectedItems = order.items.filter((item) => item.collected).length;
+  const readyItems = order.items.length; // All items are ready when order status is READY
+  const cookingItems = order.status === 'READY' || order.status === 'PICKED_UP' ? 0 : totalItems;
+
+  // Determine current step
+  let currentStep = 0;
+  if (order.status === 'READY' && collectedItems === 0) currentStep = 1;
+  else if (order.status === 'READY' && collectedItems > 0 && collectedItems < totalItems) currentStep = 1;
+  else if (collectedItems === totalItems || order.status === 'PICKED_UP') currentStep = 2;
+  else if (order.status === 'PENDING' || order.status === 'CONFIRMED' || order.status === 'PREPARING') currentStep = 0;
+
   const eta = order.estimatedAt ? new Date(order.estimatedAt) : null;
   const isUpcoming = eta && eta > new Date();
+  const canCollect = order.status === 'READY' && user?.id === order.userId;
 
   return (
     <div className="max-w-lg mx-auto">
@@ -114,15 +141,20 @@ export function OrderPage() {
         <div className="bg-gradient-to-r from-indigo-600 to-indigo-700 px-6 py-5">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-indigo-200 text-xs font-semibold tracking-wider uppercase">Token Number</p>
+              <p className="text-indigo-200 text-xs font-semibold tracking-wider uppercase">Token</p>
               <p className="text-3xl font-bold text-white">#{order.tokenNumber}</p>
             </div>
             <div className="text-right">
               <span className={`inline-block px-3 py-1 text-sm font-semibold rounded-full border ${statusColors[order.status]}`}>
                 {order.status.replace('_', ' ')}
               </span>
+              {order.user && (
+                <p className="text-sm text-indigo-200 mt-2">
+                  {order.user.name} ({order.user.rollNumber || order.user.email?.split('@')[0]})
+                </p>
+              )}
               {order.queueEntry && order.status !== 'PICKED_UP' && order.status !== 'CANCELLED' && (
-                <p className="text-sm text-indigo-200 flex items-center justify-end gap-1 mt-2">
+                <p className="text-xs text-indigo-200 flex items-center justify-end gap-1 mt-1">
                   <Hash className="h-3 w-3" /> Queue #{order.queueEntry.positionInQueue}
                 </p>
               )}
@@ -131,6 +163,19 @@ export function OrderPage() {
         </div>
 
         <div className="p-6">
+          {/* All Items Ready Banner */}
+          {order.status === 'READY' && collectedItems < totalItems && (
+            <div className="mb-5 flex items-center gap-3 text-sm bg-green-50 text-green-700 rounded-xl p-4 border border-green-100">
+              <CheckCircle className="h-5 w-5 text-green-500 shrink-0" />
+              <div>
+                <p className="font-medium">ALL ITEMS READY FOR PICKUP!</p>
+                <p className="text-xs text-green-600 mt-0.5">
+                  Show Token #{order.tokenNumber} at Counter #1
+                </p>
+              </div>
+            </div>
+          )}
+
           {/* Progress Steps */}
           {order.status !== 'CANCELLED' && (
             <div className="mb-6">
@@ -138,12 +183,14 @@ export function OrderPage() {
                 {statusSteps.map((step, i) => (
                   <div key={step.key} className="flex-1">
                     <div className={`h-2.5 rounded-full transition-all duration-300 ${
-                      i <= currentIndex ? 'bg-indigo-600' : 'bg-slate-200'
+                      i <= currentStep ? 'bg-green-500' : 'bg-slate-200'
                     }`} />
                     <p className={`text-xs mt-1.5 text-center font-medium ${
-                      i <= currentIndex ? 'text-indigo-600' : 'text-slate-400'
+                      i <= currentStep ? 'text-green-600' : 'text-slate-400'
                     }`}>
-                      {step.label}
+                      {step.label} {step.key === 'cooking' && `(${cookingItems} items)`}
+                      {step.key === 'ready' && `(${readyItems - collectedItems} ready)`}
+                      {step.key === 'collected' && `(${collectedItems}/${totalItems})`}
                     </p>
                   </div>
                 ))}
@@ -156,36 +203,74 @@ export function OrderPage() {
             <div className="mb-5 flex items-center gap-3 text-sm bg-indigo-50 text-indigo-700 rounded-xl p-4 border border-indigo-100">
               <Clock className="h-5 w-5 text-indigo-500" />
               <div>
-                <p className="font-medium">Estimated ready by <strong>{eta.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</strong></p>
-                {order.queueEntry?.estimatedReadyAt && (
-                  <p className="text-xs text-indigo-500 mt-0.5">
-                    Queue position: {order.queueEntry.positionInQueue}
-                  </p>
-                )}
+                <p className="font-medium">
+                  Estimated ready by{' '}
+                  <strong>{eta.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</strong>
+                </p>
               </div>
             </div>
           )}
 
           {/* Order Items */}
-          <div className="border-t border-slate-200 pt-4 space-y-3">
-            <h3 className="text-sm font-semibold text-slate-900">Order Summary</h3>
-            {order.items.map((item) => (
-              <div key={item.id} className="flex justify-between text-sm">
-                <span className="text-slate-600">
-                  {item.quantity}x {item.menuItem?.name ?? 'Item'}
+          <div className="border-t border-slate-200 pt-4">
+            <div className="flex items-center justify-between mb-3">
+              <h3 className="text-sm font-semibold text-slate-900">
+                ORDERED ITEMS ({totalItems}):
+              </h3>
+              {order.status === 'READY' && (
+                <span className="text-xs font-medium text-green-600 bg-green-50 px-2 py-1 rounded-full">
+                  {totalItems - collectedItems} Ready for Pickup
                 </span>
-                <span className="text-slate-900 font-medium">₹{(item.menuItem?.price ?? 0) * item.quantity}</span>
-              </div>
-            ))}
-            <div className="border-t border-slate-200 pt-3 flex justify-between font-bold text-base">
-              <span>Total</span>
+              )}
+            </div>
+
+            {canCollect && (
+              <p className="text-xs text-slate-500 mb-3">
+                Click the checkbox for pickup ready items to collect & dim them
+              </p>
+            )}
+
+            <div className="space-y-3">
+              {order.items.map((item) => (
+                <OrderItemRow
+                  key={item.id}
+                  item={item}
+                  canCollect={canCollect}
+                  onCollect={() => handleCollectItem(item.id)}
+                  loading={actionLoading}
+                />
+              ))}
+            </div>
+
+            {/* Total */}
+            <div className="flex justify-between font-bold text-base mt-4 pt-3 border-t border-slate-200">
+              <span>Total {order.paymentMethod === 'upi' ? 'Paid (UPI):' : order.paymentMethod === 'campus_card' ? 'Paid (Campus Card):' : 'Pay at Counter:'}</span>
               <span className="text-indigo-600">₹{order.totalAmount}</span>
             </div>
           </div>
 
+          {/* Collect All Button */}
+          {canCollect && collectedItems < totalItems && (
+            <div className="mt-6">
+              <button
+                onClick={() => {
+                  // Collect all uncollected items
+                  order.items
+                    .filter((item) => !item.collected)
+                    .forEach((item) => handleCollectItem(item.id));
+                }}
+                disabled={actionLoading}
+                className="w-full py-3 bg-green-600 text-white font-semibold rounded-xl hover:bg-green-700 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+              >
+                <CheckCircle className="h-5 w-5" />
+                I Have Collected My Entire Order (#{order.tokenNumber})
+              </button>
+            </div>
+          )}
+
           {/* Actions */}
-          <div className="flex gap-3 mt-6">
-            {order.status === 'READY' && (
+          <div className="flex gap-3 mt-4">
+            {order.status === 'READY' && collectedItems === totalItems && (
               <button
                 onClick={handlePickUp}
                 disabled={actionLoading}
@@ -211,6 +296,78 @@ export function OrderPage() {
             Ordered at {new Date(order.createdAt).toLocaleString()}
           </p>
         </div>
+      </div>
+    </div>
+  );
+}
+
+function OrderItemRow({
+  item,
+  canCollect,
+  onCollect,
+  loading,
+}: {
+  item: OrderItem;
+  canCollect: boolean;
+  onCollect: () => void;
+  loading: boolean;
+}) {
+  const isCollected = item.collected;
+  const isReady = !isCollected; // If order is READY, all items are ready
+
+  return (
+    <div
+      className={`flex items-center gap-3 p-4 rounded-xl border transition-all ${
+        isCollected
+          ? 'bg-slate-50 border-slate-200 opacity-50'
+          : isReady
+          ? 'bg-green-50 border-green-200'
+          : 'bg-white border-slate-200'
+      }`}
+    >
+      {/* Checkbox */}
+      {canCollect && !isCollected && (
+        <button
+          onClick={onCollect}
+          disabled={loading}
+          className="h-6 w-6 rounded border-2 border-green-400 flex items-center justify-center hover:bg-green-100 transition-colors shrink-0"
+        >
+          <Check className="h-4 w-4 text-green-600" />
+        </button>
+      )}
+      {isCollected && (
+        <div className="h-6 w-6 rounded bg-green-500 flex items-center justify-center shrink-0">
+          <Check className="h-4 w-4 text-white" />
+        </div>
+      )}
+
+      {/* Item Info */}
+      <div className="flex-1 min-w-0">
+        <p className={`text-sm font-medium ${isCollected ? 'text-slate-400 line-through' : 'text-slate-900'}`}>
+          {item.quantity}x {item.menuItem?.name ?? 'Item'}
+        </p>
+        {isReady && !isCollected && (
+          <p className="text-xs text-green-600 mt-0.5">Ready for Pickup • Tap checkbox or click Collect below</p>
+        )}
+        {isCollected && (
+          <p className="text-xs text-green-600 mt-0.5">✓ Collected</p>
+        )}
+      </div>
+
+      {/* Price & Action */}
+      <div className="flex items-center gap-3 shrink-0">
+        {isReady && !isCollected && canCollect && (
+          <button
+            onClick={onCollect}
+            disabled={loading}
+            className="px-3 py-1.5 bg-green-600 text-white text-xs font-semibold rounded-lg hover:bg-green-700 transition-colors"
+          >
+            ✓ Mark Collected
+          </button>
+        )}
+        <span className={`text-sm font-bold ${isCollected ? 'text-slate-400' : 'text-slate-900'}`}>
+          ₹{(item.menuItem?.price ?? 0) * item.quantity}
+        </span>
       </div>
     </div>
   );
