@@ -1,10 +1,27 @@
 # Deployment Guide
 
+## Production URLs
+
+| Service | URL | Platform |
+|---------|-----|----------|
+| **Frontend** | https://smart-canteen.peelapuneeth.workers.dev | Cloudflare Workers |
+| **Backend API** | https://miniproj-m2b6.onrender.com/api | Render.com |
+| **Database** | Neon PostgreSQL (smart-canteen project) | neon.tech |
+
+## Demo Accounts
+
+| Email | Password | Role |
+|-------|----------|------|
+| student@college.edu | password | STUDENT |
+| kitchen@college.edu | password | KITCHEN_STAFF |
+
+---
+
 ## Prerequisites
 
 1. **Neon PostgreSQL** — https://neon.tech (free tier available)
-2. **Koyeb** — https://koyeb.com (free tier available)
-3. **Cloudflare Pages** — https://pages.cloudflare.com (free tier available)
+2. **Render.com** — https://render.com (free tier available)
+3. **Cloudflare** — https://dash.cloudflare.com (free tier available)
 4. **GitHub account** — https://github.com
 
 ---
@@ -51,143 +68,87 @@ Demo accounts created by seed:
 
 ---
 
-## Step 3: Deploy Backend to Koyeb
+## Step 3: Deploy Backend to Render.com
 
-### Option A: Via Koyeb Dashboard (Recommended)
-
-1. Create a free account at https://koyeb.com
-2. Click **Create App**
-3. Choose **Git** as the deployment method
-4. Connect GitHub and select `PuneethPeela/miniproj`
-5. Configure:
-   - **Name**: `smart-canteen-api`
-   - **Instance**: Nano (free)
-   - **Port**: `3000`
-6. Set **Environment Variables**:
-   ```
-   DATABASE_URL=postgresql://user:pass@ep-xxx.neon.tech/dbname?sslmode=require
-   CLIENT_ORIGIN=https://smart-canteen.pages.dev
-   JWT_SECRET=<generate-a-random-secret-string>
-   JWT_EXPIRES_IN=7d
-   NODE_ENV=production
-   PORT=3000
-   ```
-7. Set **Build & Run Commands**:
-   - Build: `cd backend && npm install && npx prisma generate && npm run build`
-   - Run: `cd backend && node dist/index.js`
-8. Click **Deploy**
-
-### Option B: Via Koyeb CLI
-
-```bash
-# Install Koyeb CLI
-curl -fsSL https://cli.koyeb.com/install.sh | sh
-koyeb login
-
-# Create app
-koyeb apps create smart-canteen-api
-koyeb services create smart-canteen-api \
-  --app smart-canteen-api \
-  --git https://github.com/PuneethPeela/miniproj.git \
-  --git-branch main \
-  --instance-type nano \
-  --ports 3000:http \
-  --env "DATABASE_URL=<your-neon-url>" \
-  --env "CLIENT_ORIGIN=https://smart-canteen.pages.dev" \
-  --env "JWT_SECRET=<random-secret>" \
-  --env "JWT_EXPIRES_IN=7d" \
-  --env "NODE_ENV=production" \
-  --build-command "cd backend && npm install && npx prisma generate && npm run build" \
-  --run-command "cd backend && node dist/index.js"
-```
-
----
-
-## Step 4: Deploy Frontend to Cloudflare Pages
-
-### Option A: Via Cloudflare Dashboard (Recommended)
-
-1. Log in to https://dash.cloudflare.com
-2. Go to **Workers & Pages** → **Create** → **Pages**
+1. Create a free account at https://render.com
+2. Click **New** → **Web Service**
 3. Connect GitHub and select `PuneethPeela/miniproj`
 4. Configure:
-   - **Project name**: `smart-canteen`
-   - **Production branch**: `main`
-   - **Build command**: `cd frontend && npm install && npm run build`
-   - **Build output directory**: `frontend/dist`
-   - **Node.js version**: `22`
-5. Add **Environment Variables**:
+   - **Name**: `miniproj`
+   - **Runtime**: Node
+   - **Root Directory**: `backend`
+   - **Branch**: main
+   - **Region**: Oregon (US West)
+   - **Instance**: Free ($0/month)
+5. Set **Build Command**:
    ```
-   VITE_API_URL=https://smart-canteen-api.koyeb.app/api
+   npm install --include=dev && npx prisma generate && npm run build
    ```
-6. Click **Save and Deploy**
-
-### Option B: Via Wrangler CLI
-
-```bash
-# Install Wrangler
-npm install -g wrangler
-wrangler login
-
-# Build frontend
-cd frontend
-npm install
-npm run build
-
-# Deploy
-wrangler pages deploy dist --project-name smart-canteen
-```
+6. Set **Start Command**:
+   ```
+   node dist/index.js
+   ```
+7. Add **Environment Variables**:
+   ```
+   PORT=3000
+   DATABASE_URL=<your-neon-connection-string>
+   CLIENT_ORIGIN=https://smart-canteen.peelapuneeth.workers.dev
+   JWT_SECRET=smart-canteen-secret-2026
+   JWT_EXPIRES_IN=7d
+   NODE_ENV=production
+   ```
+8. Click **Create Web Service**
 
 ---
 
-## Step 5: Update CORS Origin
+## Step 4: Deploy Frontend to Cloudflare
 
-After frontend is deployed, update the backend's `CLIENT_ORIGIN` env var in Koyeb to your actual Cloudflare Pages URL:
-```
-CLIENT_ORIGIN=https://smart-canteen.pages.dev
-```
+1. Install Wrangler CLI:
+   ```bash
+   npm install -g wrangler
+   wrangler login
+   ```
 
----
+2. Create `wrangler.jsonc` in project root:
+   ```json
+   {
+     "name": "smart-canteen",
+     "compatibility_date": "2026-09-11",
+     "assets": {
+       "directory": "./frontend/dist",
+       "not_found_handling": "single-page-application"
+     }
+   }
+   ```
 
-## Features Included
-
-### Student
-- Register / Login with JWT authentication
-- Browse menu with search and category filter
-- Add items to cart and place orders
-- Track order status in real-time (PENDING → CONFIRMED → PREPARING → READY → PICKED_UP)
-- Pick up orders when ready
-- Cancel pending orders
-- View queue status and estimated wait time
-
-### Kitchen Staff
-- View active orders with real-time updates
-- Advance order status (PENDING → CONFIRMED → PREPARING → READY)
-- Manage menu items (Add / Edit / Delete / Toggle availability)
-- View queue analytics
-
-### Real-time
-- Socket.io WebSocket events for live order updates
-- Queue status broadcast to all connected clients
-- Kitchen dashboard auto-updates on new orders
+3. Build and deploy:
+   ```bash
+   cd frontend
+   VITE_API_URL=https://miniproj-m2b6.onrender.com/api \
+   VITE_SOCKET_URL=https://miniproj-m2b6.onrender.com \
+   npm run build
+   cd ..
+   wrangler deploy
+   ```
 
 ---
 
 ## Environment Variables Reference
 
-### Backend (Koyeb)
-| Variable | Description | Example |
-|----------|-------------|---------|
+### Backend (Render.com)
+| Variable | Description | Value |
+|----------|-------------|-------|
 | `PORT` | Server port | `3000` |
 | `DATABASE_URL` | Neon PostgreSQL URL | `postgresql://...` |
-| `CLIENT_ORIGIN` | Frontend URL for CORS | `https://smart-canteen.pages.dev` |
-| `JWT_SECRET` | Secret for JWT signing | `<random-string>` |
+| `CLIENT_ORIGIN` | Frontend URL for CORS | `https://smart-canteen.peelapuneeth.workers.dev` |
+| `JWT_SECRET` | Secret for JWT signing | `smart-canteen-secret-2026` |
 | `JWT_EXPIRES_IN` | Token expiration | `7d` |
 
-### Frontend (Cloudflare Pages)
-| Variable | Description | Example |
-|----------|-------------|---------|
-| `VITE_API_URL` | Backend API base URL | `https://smart-canteen-api.koyeb.app/api` |
+### Frontend (Cloudflare)
+| Variable | Description | Value |
+|----------|-------------|-------|
+| `VITE_API_URL` | Backend API base URL | `https://miniproj-m2b6.onrender.com/api` |
+| `VITE_SOCKET_URL` | WebSocket server URL | `https://miniproj-m2b6.onrender.com` |
 
 ---
 
@@ -210,6 +171,34 @@ npm run dev
 ```
 
 Frontend: http://localhost:5173 | Backend: http://localhost:3000
+
+---
+
+## Features Included
+
+### Student
+- Register / Login with JWT authentication
+- Browse menu with search and category filter
+- Add items to cart and place orders
+- Track order status in real-time (PENDING → CONFIRMED → PREPARING → READY → PICKED_UP)
+- Pick up orders when ready
+- Cancel pending orders
+- View queue status and estimated wait time
+
+### Kitchen Staff
+- View active orders with real-time updates
+- Advance order status (PENDING → CONFIRMED → PREPARING → READY)
+- Manage menu items (Add / Edit / Delete / Toggle availability)
+- View queue analytics
+
+### Manager
+- Full kitchen dashboard access
+- Menu management capabilities
+
+### Real-time
+- Socket.io WebSocket events for live order updates
+- Queue status broadcast to all connected clients
+- Kitchen dashboard auto-updates on new orders
 
 ---
 
@@ -241,5 +230,6 @@ Frontend: http://localhost:5173 | Backend: http://localhost:3000
 ├── docs/
 │   ├── TRD.md               # Technical Requirements Document
 │   └── MRD.md               # Market Requirements Document
+├── wrangler.jsonc            # Cloudflare Workers config
 └── DEPLOYMENT.md            # This file
 ```

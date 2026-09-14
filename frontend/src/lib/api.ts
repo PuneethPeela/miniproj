@@ -21,7 +21,7 @@ async function request<T>(path: string, options?: RequestInit): Promise<T> {
     throw new Error(data.error || data.message || 'Request failed');
   }
 
-  return data as T;
+  return (data.data !== undefined ? data.data : data) as T;
 }
 
 export const auth = {

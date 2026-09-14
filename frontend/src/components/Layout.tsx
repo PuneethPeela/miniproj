@@ -13,9 +13,15 @@ const kitchenLinks = [
   { to: '/orders', icon: Clock, label: 'Queue' },
 ];
 
+const roleLabels: Record<string, string> = {
+  STUDENT: 'Student',
+  KITCHEN_STAFF: 'Kitchen Staff',
+  MANAGER: 'Manager',
+};
+
 export function Layout() {
   const { user, logout } = useAuth();
-  const links = user?.role === 'KITCHEN_STAFF' ? kitchenLinks : studentLinks;
+  const links = user?.role === 'KITCHEN_STAFF' || user?.role === 'MANAGER' ? kitchenLinks : studentLinks;
 
   return (
     <div className="min-h-screen bg-slate-50">
@@ -59,7 +65,7 @@ export function Layout() {
                 <div className="text-left">
                   <p className="text-sm font-medium text-slate-900 leading-none">{user?.name}</p>
                   <p className="text-[10px] text-slate-500 leading-none mt-0.5">
-                    {user?.role === 'KITCHEN_STAFF' ? 'Kitchen Staff' : 'Student'}
+                    {roleLabels[user?.role || ''] || 'Student'}
                   </p>
                 </div>
               </div>
