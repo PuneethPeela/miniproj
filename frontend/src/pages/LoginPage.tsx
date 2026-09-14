@@ -1,10 +1,26 @@
-import { useState, type FormEvent } from 'react';
+import { useState, useEffect, type FormEvent } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { UtensilsCrossed, Lock, User, ChefHat, Eye, EyeOff, Shield } from 'lucide-react';
 import { toast } from 'sonner';
 import { useAuth } from '../hooks/useAuth';
 
 type Tab = 'student' | 'staff' | 'manager';
+
+declare global {
+  interface Window {
+    google?: {
+      accounts: {
+        id: {
+          initialize: (config: {
+            client_id: string;
+            callback: (response: { credential: string }) => void;
+          }) => void;
+          renderButton: (element: HTMLElement, config: Record<string, unknown>) => void;
+        };
+      };
+    };
+  }
+}
 
 export function LoginPage() {
   const [tab, setTab] = useState<Tab>('student');
@@ -14,8 +30,60 @@ export function LoginPage() {
   const [pin, setPin] = useState('');
   const [showPin, setShowPin] = useState(false);
   const [loading, setLoading] = useState(false);
-  const { login } = useAuth();
+  const [googleLoading, setGoogleLoading] = useState(false);
+  const { login, googleLogin } = useAuth();
   const navigate = useNavigate();
+
+  useEffect(() => {
+    // Load Google Identity Services script
+    const script = document.createElement('script');
+    script.src = 'https://accounts.google.com/gsi/client';
+    script.async = true;
+    script.defer = true;
+    script.onload = () => {
+      const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
+      if (clientId && window.google) {
+        window.google.accounts.id.initialize({
+          client_id: clientId,
+          callback: handleGoogleCallback,
+        });
+
+        const container = document.getElementById('google-signin-btn');
+        if (container) {
+          window.google.accounts.id.renderButton(container, {
+            theme: 'outline',
+            size: 'large',
+            width: '100%',
+            text: 'continue_with',
+            shape: 'rectangular',
+          });
+        }
+      }
+    };
+    document.head.appendChild(script);
+
+    return () => {
+      document.head.removeChild(script);
+    };
+  }, []);
+
+  const handleGoogleCallback = async (response: { credential: string }) => {
+    setGoogleLoading(true);
+    try {
+      const result = await googleLogin(response.credential);
+      if (result.isNewUser || !result.profileComplete) {
+        toast.success('Welcome! Please complete your profile.');
+        navigate('/complete-profile');
+      } else {
+        toast.success('Welcome back!');
+        navigate('/');
+      }
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Google sign-in failed');
+    } finally {
+      setGoogleLoading(false);
+    }
+  };
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
@@ -73,23 +141,42 @@ export function LoginPage() {
       {/* Main Card */}
       <main className="flex-1 flex items-start justify-center px-4 pt-8 pb-12">
         <div className="w-full max-w-md">
-          {/* Auth Header */}
-          <div className="bg-gradient-to-r from-indigo-600 to-indigo-700 rounded-t-2xl px-6 py-5">
-            <div className="flex items-center gap-3 mb-2">
-              <div className="h-10 w-10 bg-white/20 rounded-lg flex items-center justify-center">
-                <Lock className="h-5 w-5 text-white" />
+          {/* Welcome Card with Google Sign-In */}
+          <div className="bg-white rounded-2xl shadow-xl p-6 mb-4">
+            <h2 className="text-xl font-bold text-slate-900 mb-1">Welcome back</h2>
+            <p className="text-sm text-slate-500 mb-5">Sign in to access your canteen account</p>
+
+            {/* Google Sign-In Button */}
+            <div id="google-signin-btn" className="w-full" />
+
+            {googleLoading && (
+              <div className="flex items-center justify-center gap-2 py-3 text-sm text-slate-500">
+                <span className="h-4 w-4 border-2 border-indigo-300 border-t-indigo-600 rounded-full animate-spin" />
+                Signing in with Google...
               </div>
-              <div>
-                <p className="text-indigo-200 text-xs font-semibold tracking-wider uppercase">Authentication Required</p>
-                <h2 className="text-white text-xl font-bold">Sign in to Smart Canteen</h2>
+            )}
+
+            <div className="relative my-5">
+              <div className="absolute inset-0 flex items-center">
+                <div className="w-full border-t border-slate-200" />
+              </div>
+              <div className="relative flex justify-center text-xs">
+                <span className="bg-white px-3 text-slate-400">or sign in with email</span>
               </div>
             </div>
-            <p className="text-indigo-200 text-sm">Access food pre-ordering, live queue tokens, or kitchen management.</p>
+
+            <Link
+              to="/register"
+              className="w-full flex items-center justify-center gap-2 py-2.5 border border-slate-300 rounded-lg text-sm font-medium text-slate-700 hover:bg-slate-50 transition-colors"
+            >
+              Create a new account
+            </Link>
           </div>
 
-          {/* Tab Bar */}
-          <div className="bg-white rounded-b-2xl shadow-xl">
-            <div className="flex border-b border-slate-200">
+          {/* Email/Password Login Card */}
+          <div className="bg-white rounded-2xl shadow-xl">
+            {/* Tab Bar */}
+            <div className="flex border-b border-slate-200 rounded-t-2xl">
               <button
                 onClick={() => { setTab('student'); setEmail('student@college.edu'); setPassword(''); setPin(''); }}
                 className={`flex-1 flex items-center justify-center gap-2 py-3.5 text-sm font-semibold transition-colors ${
@@ -188,18 +275,6 @@ export function LoginPage() {
               </div>
             </div>
 
-            {/* Divider */}
-            <div className="px-6 py-2">
-              <div className="relative">
-                <div className="absolute inset-0 flex items-center">
-                  <div className="w-full border-t border-slate-200" />
-                </div>
-                <div className="relative flex justify-center text-xs">
-                  <span className="bg-white px-3 text-slate-400">or sign in with email</span>
-                </div>
-              </div>
-            </div>
-
             {/* Login Form */}
             <form onSubmit={handleSubmit} className="px-6 pb-6 space-y-4">
               <div>
@@ -269,6 +344,12 @@ export function LoginPage() {
                   </div>
                 </div>
               )}
+
+              <div className="flex items-center justify-between">
+                <Link to="/forgot-password" className="text-xs text-indigo-600 hover:underline font-medium">
+                  Forgot password?
+                </Link>
+              </div>
 
               <button
                 type="submit"

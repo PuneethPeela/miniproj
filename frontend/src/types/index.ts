@@ -2,7 +2,10 @@ export interface User {
   id: string;
   name: string;
   email: string;
+  rollNumber?: string;
   role: 'STUDENT' | 'KITCHEN_STAFF' | 'MANAGER';
+  provider?: string;
+  profileComplete?: boolean;
   createdAt: string;
 }
 

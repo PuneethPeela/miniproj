@@ -1,6 +1,6 @@
 import { useState, type FormEvent } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { UtensilsCrossed, Lock, User, Mail, GraduationCap, ChefHat } from 'lucide-react';
+import { UtensilsCrossed, Lock, User, Mail, GraduationCap, ChefHat, Info } from 'lucide-react';
 import { toast } from 'sonner';
 import { useAuth } from '../hooks/useAuth';
 
@@ -13,10 +13,17 @@ export function RegisterPage() {
   const { register } = useAuth();
   const navigate = useNavigate();
 
+  const emailPrefix = email.split('@')[0] || '';
+  const isCollegeEmail = email.endsWith('@matrusri.edu.in');
+
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     if (!name || !email || !password) {
       toast.error('Please fill in all fields');
+      return;
+    }
+    if (!isCollegeEmail) {
+      toast.error('Only @matrusri.edu.in emails are allowed');
       return;
     }
     setLoading(true);
@@ -67,6 +74,15 @@ export function RegisterPage() {
 
           {/* Form Card */}
           <div className="bg-white rounded-b-2xl shadow-xl">
+            {/* Domain Notice */}
+            <div className="mx-6 mt-5 p-3 bg-indigo-50 border border-indigo-200 rounded-lg flex items-start gap-2">
+              <Info className="h-4 w-4 text-indigo-600 mt-0.5 shrink-0" />
+              <p className="text-xs text-indigo-700">
+                Registration is restricted to <strong>@matrusri.edu.in</strong> college emails only.
+                Your roll number will be derived from your email prefix.
+              </p>
+            </div>
+
             {/* Role Selection */}
             <div className="px-6 pt-5">
               <p className="text-xs font-semibold text-slate-400 tracking-wider uppercase mb-3">Select Your Role</p>
@@ -123,7 +139,7 @@ export function RegisterPage() {
 
               <div>
                 <label className="block text-sm font-medium text-slate-700 mb-1.5">
-                  {role === 'STUDENT' ? 'Email Address' : 'Staff Email or Official ID'}
+                  College Email Address
                 </label>
                 <div className="relative">
                   <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
@@ -132,11 +148,23 @@ export function RegisterPage() {
                     required
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    className="w-full pl-10 pr-4 py-2.5 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent bg-slate-50"
-                    placeholder={role === 'STUDENT' ? 'you@college.edu' : 'staff@college.edu'}
+                    className={`w-full pl-10 pr-4 py-2.5 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent bg-slate-50 ${
+                      email && !isCollegeEmail ? 'border-red-300 bg-red-50' : 'border-slate-300'
+                    }`}
+                    placeholder="you@matrusri.edu.in"
                   />
                 </div>
+                {email && !isCollegeEmail && (
+                  <p className="text-xs text-red-600 mt-1">Only @matrusri.edu.in emails are accepted</p>
+                )}
               </div>
+
+              {isCollegeEmail && emailPrefix && (
+                <div className="p-3 bg-slate-50 border border-slate-200 rounded-lg">
+                  <p className="text-xs text-slate-500">Your roll number will be:</p>
+                  <p className="text-sm font-bold text-slate-900 font-mono">{emailPrefix}</p>
+                </div>
+              )}
 
               <div>
                 <label className="block text-sm font-medium text-slate-700 mb-1.5">Password</label>
@@ -156,7 +184,7 @@ export function RegisterPage() {
 
               <button
                 type="submit"
-                disabled={loading}
+                disabled={loading || !isCollegeEmail}
                 className="w-full py-3 bg-indigo-600 text-white font-semibold rounded-lg hover:bg-indigo-700 transition-all disabled:opacity-50 shadow-lg shadow-indigo-600/25"
               >
                 {loading ? (

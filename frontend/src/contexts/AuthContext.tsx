@@ -8,6 +8,8 @@ interface AuthContextType {
   loading: boolean;
   login: (email: string, password: string) => Promise<void>;
   register: (name: string, email: string, password: string, role: string) => Promise<void>;
+  googleLogin: (idToken: string) => Promise<{ profileComplete: boolean; isNewUser: boolean }>;
+  completeProfile: (rollNumber: string) => Promise<void>;
   logout: () => void;
   loadProfile: () => Promise<void>;
 }
@@ -52,6 +54,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser(res.user);
   };
 
+  const googleLogin = async (idToken: string) => {
+    const res = await authApi.googleLogin(idToken);
+    localStorage.setItem('token', res.token);
+    setToken(res.token);
+    setUser(res.user);
+    return { profileComplete: res.profileComplete, isNewUser: res.isNewUser };
+  };
+
+  const completeProfile = async (rollNumber: string) => {
+    const updatedUser = await authApi.completeProfile(rollNumber);
+    setUser(updatedUser);
+  };
+
   const logout = () => {
     localStorage.removeItem('token');
     setToken(null);
@@ -59,7 +74,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   return (
-    <AuthContext.Provider value={{ user, token, loading, login, register, logout, loadProfile }}>
+    <AuthContext.Provider value={{ user, token, loading, login, register, googleLogin, completeProfile, logout, loadProfile }}>
       {children}
     </AuthContext.Provider>
   );

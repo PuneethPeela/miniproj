@@ -36,13 +36,18 @@ enum QueueStage {
 // ── Models ───────────────────────────────────────────────────────────────
 
 model User {
-  id           String   @id @default(cuid())
-  name         String
-  email        String   @unique
-  passwordHash String   @map("password_hash")
-  role         Role     @default(STUDENT)
-  createdAt    DateTime @default(now()) @map("created_at")
-  updatedAt    DateTime @updatedAt      @map("updated_at")
+  id             String    @id @default(cuid())
+  name           String
+  email          String    @unique
+  rollNumber     String?   @unique @map("roll_number")
+  passwordHash   String?   @map("password_hash")
+  role           Role      @default(STUDENT)
+  provider       String    @default("local") // "local" or "google"
+  profileComplete Boolean @default(true) @map("profile_complete")
+  otp            String?
+  otpExpires     DateTime? @map("otp_expires")
+  createdAt      DateTime  @default(now()) @map("created_at")
+  updatedAt      DateTime  @updatedAt       @map("updated_at")
 
   orders            Order[]
   stockRequests     StockRequest[] @relation("StockRequester")

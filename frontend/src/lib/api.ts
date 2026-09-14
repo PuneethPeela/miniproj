@@ -38,6 +38,41 @@ export const auth = {
     }),
 
   getProfile: () => request<import('../types').User>('/auth/profile'),
+
+  googleLogin: (idToken: string) =>
+    request<{
+      token: string;
+      user: import('../types').User;
+      profileComplete: boolean;
+      isNewUser: boolean;
+    }>('/auth/google', {
+      method: 'POST',
+      body: JSON.stringify({ idToken }),
+    }),
+
+  completeProfile: (rollNumber: string) =>
+    request<import('../types').User>('/auth/complete-profile', {
+      method: 'POST',
+      body: JSON.stringify({ rollNumber }),
+    }),
+
+  forgotPassword: (email: string) =>
+    request<{ message: string }>('/auth/forgot-password', {
+      method: 'POST',
+      body: JSON.stringify({ email }),
+    }),
+
+  verifyOTP: (email: string, otp: string) =>
+    request<{ resetToken: string }>('/auth/verify-otp', {
+      method: 'POST',
+      body: JSON.stringify({ email, otp }),
+    }),
+
+  resetPassword: (resetToken: string, newPassword: string) =>
+    request<{ message: string }>('/auth/reset-password', {
+      method: 'POST',
+      body: JSON.stringify({ resetToken, newPassword }),
+    }),
 };
 
 export const menu = {

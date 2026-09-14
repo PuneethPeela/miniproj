@@ -5,6 +5,8 @@ import { ProtectedRoute } from './components/ProtectedRoute';
 import { Layout } from './components/Layout';
 import { LoginPage } from './pages/LoginPage';
 import { RegisterPage } from './pages/RegisterPage';
+import { CompleteProfilePage } from './pages/CompleteProfilePage';
+import { ForgotPasswordPage } from './pages/ForgotPasswordPage';
 import { MenuPage } from './pages/MenuPage';
 import { QueuePage } from './pages/QueuePage';
 import { OrderPage } from './pages/OrderPage';
@@ -17,9 +19,17 @@ export default function App() {
       <AuthProvider>
         <SocketProvider>
           <Routes>
+            {/* Public routes */}
             <Route path="/login" element={<LoginPage />} />
             <Route path="/register" element={<RegisterPage />} />
+            <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+
+            {/* Protected routes — require auth */}
             <Route element={<ProtectedRoute />}>
+              {/* Profile completion — requires auth but profile not complete */}
+              <Route path="/complete-profile" element={<CompleteProfilePage />} />
+
+              {/* Main app layout */}
               <Route element={<Layout />}>
                 <Route path="/" element={<MenuPage />} />
                 <Route path="/menu" element={<MenuPage />} />

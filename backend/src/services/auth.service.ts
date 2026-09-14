@@ -5,6 +5,7 @@ import { AppError } from "../middleware/error.middleware";
 
 const JWT_SECRET = (process.env.JWT_SECRET || "smart-canteen-secret-key") as string;
 const JWT_EXPIRES_IN = "7d";
+const ALLOWED_DOMAIN = "matrusri.edu.in";
 
 const hashPassword = async (password: string): Promise<string> => {
   const salt = crypto.randomBytes(16).toString("hex");
@@ -32,6 +33,25 @@ export const register = async (
   password: string,
   role: string
 ) => {
+  // Domain restriction
+  const domain = email.split("@")[1];
+  if (domain !== ALLOWED_DOMAIN) {
+    throw new AppError(
+      `Only @${ALLOWED_DOMAIN} emails are allowed for registration.`,
+      403
+    );
+  }
+
+  // Roll number = email prefix validation
+  const emailPrefix = email.split("@")[0] ?? "";
+  // Roll number should match email prefix (basic validation: alphanumeric)
+  if (!/^[a-zA-Z0-9]+$/.test(emailPrefix)) {
+    throw new AppError(
+      "Email prefix does not appear to be a valid roll number.",
+      400
+    );
+  }
+
   const existingUser = await prisma.user.findUnique({ where: { email } });
   if (existingUser) {
     throw new AppError("Email already registered", 409);
@@ -43,8 +63,11 @@ export const register = async (
     data: {
       name,
       email,
-      passwordHash: hashedPassword,
+      rollNumber: emailPrefix,
+      passwordHash: hashedPassword as string,
       role: role as "STUDENT" | "KITCHEN_STAFF" | "MANAGER",
+      provider: "local",
+      profileComplete: true,
     },
   });
 
@@ -59,6 +82,18 @@ export const register = async (
 export const login = async (email: string, password: string) => {
   const user = await prisma.user.findUnique({ where: { email } });
   if (!user) {
+    throw new AppError("Invalid credentials", 401);
+  }
+
+  // Google-only users don't have a password
+  if (user.provider === "google" && !user.passwordHash) {
+    throw new AppError(
+      "This account uses Google Sign-In. Please sign in with Google instead.",
+      401
+    );
+  }
+
+  if (!user.passwordHash) {
     throw new AppError("Invalid credentials", 401);
   }
 
@@ -78,7 +113,16 @@ export const login = async (email: string, password: string) => {
 export const getProfile = async (userId: string) => {
   const user = await prisma.user.findUnique({
     where: { id: userId },
-    select: { id: true, name: true, email: true, role: true, createdAt: true },
+    select: {
+      id: true,
+      name: true,
+      email: true,
+      rollNumber: true,
+      role: true,
+      provider: true,
+      profileComplete: true,
+      createdAt: true,
+    },
   });
 
   if (!user) {

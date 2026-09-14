@@ -5,6 +5,8 @@ import { validate } from "../middleware/validate.middleware";
 
 const router = Router();
 
+// ── Email/Password Auth ───────────────────────────────────────────────────
+
 router.post(
   "/register",
   validate([
@@ -26,5 +28,26 @@ router.post(
 );
 
 router.get("/profile", authenticate, authController.getProfile);
+
+// ── Google OAuth ──────────────────────────────────────────────────────────
+
+router.post("/google", authController.googleLogin);
+
+router.post(
+  "/complete-profile",
+  authenticate,
+  validate([
+    { field: "rollNumber", label: "Roll number", required: true, type: "string" },
+  ]),
+  authController.completeProfile
+);
+
+// ── Password Reset (OTP) ──────────────────────────────────────────────────
+
+router.post("/forgot-password", authController.forgotPassword);
+
+router.post("/verify-otp", authController.verifyOTP);
+
+router.post("/reset-password", authController.resetPassword);
 
 export default router;
